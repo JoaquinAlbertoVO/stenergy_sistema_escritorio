@@ -50,46 +50,46 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
         print("⚠️ SFTP no configurado (Faltan variables de entorno). El PDF solo se guardó localmente.", flush=True)
         return
 
+    BASE_FOLDER = "stenergy-certificados"
+
     try:
         print("▶️ Conectando a SFTP...", flush=True)
-        # Configurar conexión SFTP por el puerto 22
         transport = paramiko.Transport((ftp_host, 22))
         transport.connect(username=ftp_user, password=ftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
-        print(f"▶️ Conexión SFTP exitosa. Ruta inicial: {sftp.getcwd()}", flush=True)
 
-        # 1. Intentar entrar a public_html (si estamos en el home de cPanel)
+        # 1. Navegar a public_html
         try:
             sftp.chdir("public_html")
-            print(f"▶️ Entré a public_html. Ruta actual: {sftp.getcwd()}", flush=True)
         except IOError:
-            print(f"▶️ No se encontró public_html, me quedo en: {sftp.getcwd()}", flush=True)
+            pass
 
-        # 2. Crear y entrar a la carpeta base de certificados
+        # 2. Crear carpeta base si no existe y asignar permisos públicos (755)
         try:
-            sftp.chdir("CERTIFICADOS_2026")
+            sftp.chdir(BASE_FOLDER)
         except IOError:
-            print("▶️ Creando carpeta CERTIFICADOS_2026", flush=True)
-            sftp.mkdir("CERTIFICADOS_2026")
-            sftp.chdir("CERTIFICADOS_2026")
-        print(f"▶️ Ruta tras CERTIFICADOS_2026: {sftp.getcwd()}", flush=True)
+            print(f"▶️ Creando carpeta base: {BASE_FOLDER}", flush=True)
+            sftp.mkdir(BASE_FOLDER)
+            sftp.chmod(BASE_FOLDER, 0o755)
+            sftp.chdir(BASE_FOLDER)
 
-        # 3. Crear y entrar a la carpeta del curso
+        # 3. Crear carpeta del curso si no existe y asignar permisos públicos (755)
         try:
             sftp.chdir(course_name)
         except IOError:
-            print(f"▶️ Creando carpeta del curso {course_name}", flush=True)
+            print(f"▶️ Creando carpeta del curso: {course_name}", flush=True)
             sftp.mkdir(course_name)
+            sftp.chmod(course_name, 0o755)
             sftp.chdir(course_name)
-        print(f"▶️ Ruta final (donde se guardará el PDF): {sftp.getcwd()}", flush=True)
 
-        # 4. Subir el archivo
-        print("▶️ Subiendo archivo PDF físico...", flush=True)
+        # 4. Subir el archivo PDF y asignar permisos de lectura pública (644)
+        print("▶️ Subiendo PDF...", flush=True)
         sftp.put(pdf_path, filename)
+        sftp.chmod(filename, 0o644)
 
         sftp.close()
         transport.close()
-        print(f"✅ PDF subido a cPanel por SFTP: /CERTIFICADOS_2026/{course_name}/{filename}", flush=True)
+        print(f"✅ PDF subido: /{BASE_FOLDER}/{course_name}/{filename}", flush=True)
     except Exception as e:
         print(f"❌ Error subiendo PDF por SFTP: {e}", flush=True)
 
@@ -147,7 +147,7 @@ def generate_certificate(
 ):
     try:
         # ✅ URL corregida con carpeta por curso
-        public_url = f"https://stenergyedu.com/CERTIFICADOS_2026/{course_name}/{registry_number}.pdf"
+        public_url = f"https://stenergyedu.com/stenergy-certificados/{course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
@@ -222,7 +222,7 @@ async def api_generate_certificate(request: Request):
                 content={"success": False, "error": "Faltan campos obligatorios"}
             )
 
-        public_url = f"https://stenergyedu.com/CERTIFICADOS_2026/{course_name}/{registry_number}.pdf"
+        public_url = f"https://stenergyedu.com/stenergy-certificados/{course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
