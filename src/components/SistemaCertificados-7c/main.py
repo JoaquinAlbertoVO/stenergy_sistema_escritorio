@@ -46,51 +46,51 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
     sftp_port = int(os.getenv("SFTP_PORT", "22"))
     sftp_user = os.getenv("SFTP_USER")
     sftp_pass = os.getenv("SFTP_PASS")
-    remote_dir = os.getenv("REMOTE_DIR", "/public_html/stenergy-certificados")
 
     if not all([sftp_host, sftp_user, sftp_pass]):
         print("⚠️ SFTP no configurado. El PDF solo se guardó localmente.", flush=True)
         return
 
+    BASE_FOLDER = "stenergy-certificados"
+
     try:
-        print(f"▶️ Conectando a {sftp_host}:{sftp_port}...", flush=True)
+        print("▶️ Conectando a SFTP...", flush=True)
         transport = paramiko.Transport((sftp_host, sftp_port))
         transport.connect(username=sftp_user, password=sftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
-        print(f"▶️ Conectado. Ruta base: {remote_dir}", flush=True)
 
-        # Crear carpeta base y del curso con ruta absoluta
-        course_path = f"{remote_dir}/{course_name}"
-
-        # Crear remote_dir si no existe (carpeta a carpeta)
-        parts = remote_dir.strip("/").split("/")
-        current = ""
-        for part in parts:
-            current += f"/{part}"
-            try:
-                sftp.chdir(current)
-            except IOError:
-                print(f"▶️ Creando: {current}", flush=True)
-                sftp.mkdir(current)
-                sftp.chmod(current, 0o755)
-
-        # Crear carpeta del curso si no existe
+        # 1. Navegar a public_html
         try:
-            sftp.chdir(course_path)
+            sftp.chdir("public_html")
         except IOError:
-            print(f"▶️ Creando carpeta del curso: {course_path}", flush=True)
-            sftp.mkdir(course_path)
-            sftp.chmod(course_path, 0o755)
+            pass
 
-        # Subir el archivo con ruta absoluta
-        remote_file = f"{course_path}/{filename}"
-        print(f"▶️ Subiendo PDF a: {remote_file}", flush=True)
-        sftp.put(pdf_path, remote_file)
-        sftp.chmod(remote_file, 0o644)
+        # 2. Crear carpeta base si no existe, asignar permisos 755
+        try:
+            sftp.chdir(BASE_FOLDER)
+        except IOError:
+            print(f"▶️ Creando carpeta base: {BASE_FOLDER}", flush=True)
+            sftp.mkdir(BASE_FOLDER)
+            sftp.chmod(BASE_FOLDER, 0o755)
+            sftp.chdir(BASE_FOLDER)
+
+        # 3. Crear carpeta del curso si no existe, asignar permisos 755
+        try:
+            sftp.chdir(course_name)
+        except IOError:
+            print(f"▶️ Creando carpeta del curso: {course_name}", flush=True)
+            sftp.mkdir(course_name)
+            sftp.chmod(course_name, 0o755)
+            sftp.chdir(course_name)
+
+        # 4. Subir el PDF y asignar permisos de lectura pública 644
+        print("▶️ Subiendo PDF...", flush=True)
+        sftp.put(pdf_path, filename)
+        sftp.chmod(filename, 0o644)
 
         sftp.close()
         transport.close()
-        print(f"✅ PDF subido exitosamente: {remote_file}", flush=True)
+        print(f"✅ PDF subido: /{BASE_FOLDER}/{course_name}/{filename}", flush=True)
     except Exception as e:
         print(f"❌ Error subiendo PDF por SFTP: {e}", flush=True)
 
@@ -149,7 +149,7 @@ def generate_certificate(
 ):
     try:
         # ✅ URL corregida con carpeta por curso
-        public_url = f"https://stenergyedu.com/CERTIFICADOS_2026/{course_name}/{registry_number}.pdf"
+        public_url = f"https://stenergyedu.com/stenergy-certificados/{course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
@@ -224,7 +224,7 @@ async def api_generate_certificate(request: Request):
                 content={"success": False, "error": "Faltan campos obligatorios"}
             )
 
-        public_url = f"https://stenergyedu.com/CERTIFICADOS_2026/{course_name}/{registry_number}.pdf"
+        public_url = f"https://stenergyedu.com/stenergy-certificados/{course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
