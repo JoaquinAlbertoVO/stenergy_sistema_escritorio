@@ -1,0 +1,123 @@
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { fetchGoogleSheetData } from './services/googleSheetsService';
+
+import Login from './components/Auth/Login';
+import Sidebar from './components/Layout/Sidebar';
+import Header from './components/Layout/Header';
+import Dashboard from './components/Dashboard/Dashboard';
+import SalesPanel from './components/Sales/SalesPanel';
+import DebtsPanel from './components/Debts/DebtsPanel';
+import PaymentsPanel from './components/Payments/PaymentsPanel';
+import Calendar from './components/Calendar/Calendar';
+import CoursesPanel from './components/Courses/CoursesPanel';
+import CertificatesPanel from './components/Certificates/CertificatesPanel';
+
+import './App.css';
+
+const PrivateRoute = ({ children, roles }) => {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (roles && !roles.includes(user.role)) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
+};
+
+const AppLayout = ({ children }) => {
+  return (
+    <div className="app-container">
+      <Sidebar />
+      <main className="main-content">
+        <Header />
+        <div className="page-content">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+function AppRoutes() {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+      
+      <Route path="/" element={
+        <PrivateRoute roles={['admin', 'asesor1', 'asesor2']}>
+          <AppLayout><Dashboard /></AppLayout>
+        </PrivateRoute>
+      } />
+      
+      <Route path="/ventas" element={
+        <PrivateRoute roles={['admin', 'asesor1', 'asesor2']}>
+          <AppLayout><SalesPanel /></AppLayout>
+        </PrivateRoute>
+      } />
+      
+      <Route path="/deudas" element={
+        <PrivateRoute roles={['admin', 'asesor1', 'asesor2']}>
+          <AppLayout><DebtsPanel /></AppLayout>
+        </PrivateRoute>
+      } />
+
+      <Route path="/pagos" element={
+        <PrivateRoute roles={['admin', 'asesor1', 'asesor2']}>
+          <AppLayout><PaymentsPanel /></AppLayout>
+        </PrivateRoute>
+      } />
+      
+      <Route path="/calendario" element={
+        <PrivateRoute roles={['admin']}>
+          <AppLayout><Calendar /></AppLayout>
+        </PrivateRoute>
+      } />
+      
+      <Route path="/cursos" element={
+        <PrivateRoute roles={['admin']}>
+          <AppLayout><CoursesPanel /></AppLayout>
+        </PrivateRoute>
+      } />
+
+      <Route path="/certificados" element={
+        <PrivateRoute roles={['admin', 'asesor1', 'asesor2']}>
+          <AppLayout><CertificatesPanel /></AppLayout>
+        </PrivateRoute>
+      } />
+      
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
+}
+
+function App() {
+  useEffect(() => {
+    // Probar la conexión a la base de datos de Google Sheets
+    fetchGoogleSheetData()
+      .then(data => {
+        console.log("✅ Conexión exitosa a Google Sheets!");
+        console.log("📊 Datos obtenidos:", data);
+      })
+      .catch(error => {
+        console.error("❌ Error al conectar con Google Sheets:", error);
+      });
+  }, []);
+
+  return (
+    <AuthProvider>
+      <Router basename="/sistema">
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;

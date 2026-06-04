@@ -1,0 +1,116 @@
+.certificates-panel {
+  padding: 24px;
+  animation: pageEnter 0.4s ease-out;
+}
+
+.certificates-table-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.certificates-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.certificates-table th,
+.certificates-table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.certificates-table th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.certificates-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.certificates-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.cert-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--bg-card);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  transition: all 0.2s;
+}
+
+.cert-edit-btn:hover {
+  background: var(--color-primary);
+  color: #000;
+}
+
+.cert-modal-body {
+  padding: 20px;
+}
+
+.cert-preview-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.cert-preview-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.cert-preview-row:last-child {
+  margin-bottom: 0;
+}
+
+.cert-preview-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.cert-preview-value {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.cert-badge-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cert-badge-generated {
+  background: rgba(46, 213, 115, 0.15);
+  color: #2ed573;
+}
+
+.cert-badge-pending {
+  background: rgba(255, 186, 13, 0.15);
+  color: #ffba0d;
+}
