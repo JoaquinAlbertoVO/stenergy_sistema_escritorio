@@ -56,14 +56,14 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
         transport = paramiko.Transport((ftp_host, 22))
         transport.connect(username=ftp_user, password=ftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
-        print("▶️ Conexión SFTP exitosa. Navegando carpetas...", flush=True)
+        print(f"▶️ Conexión SFTP exitosa. Ruta inicial: {sftp.getcwd()}", flush=True)
 
         # 1. Intentar entrar a public_html (si estamos en el home de cPanel)
         try:
             sftp.chdir("public_html")
+            print(f"▶️ Entré a public_html. Ruta actual: {sftp.getcwd()}", flush=True)
         except IOError:
-            print("▶️ No se encontró public_html, asumiendo ruta raíz", flush=True)
-            pass
+            print(f"▶️ No se encontró public_html, me quedo en: {sftp.getcwd()}", flush=True)
 
         # 2. Crear y entrar a la carpeta base de certificados
         try:
@@ -72,6 +72,7 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
             print("▶️ Creando carpeta CERTIFICADOS_2026", flush=True)
             sftp.mkdir("CERTIFICADOS_2026")
             sftp.chdir("CERTIFICADOS_2026")
+        print(f"▶️ Ruta tras CERTIFICADOS_2026: {sftp.getcwd()}", flush=True)
 
         # 3. Crear y entrar a la carpeta del curso
         try:
@@ -80,6 +81,7 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
             print(f"▶️ Creando carpeta del curso {course_name}", flush=True)
             sftp.mkdir(course_name)
             sftp.chdir(course_name)
+        print(f"▶️ Ruta final (donde se guardará el PDF): {sftp.getcwd()}", flush=True)
 
         # 4. Subir el archivo
         print("▶️ Subiendo archivo PDF físico...", flush=True)
