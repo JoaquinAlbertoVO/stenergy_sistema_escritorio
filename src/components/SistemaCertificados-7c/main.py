@@ -149,7 +149,7 @@ def generate_certificate(
 ):
     try:
         # ✅ URL corregida con carpeta por curso
-        public_url = f"https://stenergyedu.com/stenergy-certificados/{course_name}/{registry_number}.pdf"
+        public_url = f"https://stenergyedu.com/CERTIFICADOS_2026/{course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
@@ -224,7 +224,7 @@ async def api_generate_certificate(request: Request):
                 content={"success": False, "error": "Faltan campos obligatorios"}
             )
 
-        public_url = f"https://stenergyedu.com/stenergy-certificados/{course_name}/{registry_number}.pdf"
+        public_url = f"https://stenergyedu.com/CERTIFICADOS_2026/{course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
