@@ -18,6 +18,8 @@ from app.database import SessionLocal, engine, get_db
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
+#CHUPAPINGAEXTREMOGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
