@@ -1,7 +1,7 @@
 from pathlib import Path
 import traceback
 import os
-import ftplib
+import paramiko
 import threading
 
 from fastapi import FastAPI, Form, Request
@@ -38,39 +38,46 @@ app.add_middleware(
 )
 
 
-# 📤 Función para subir PDFs al cPanel vía FTP (se ejecuta en segundo plano)
+# 📤 Función para subir PDFs al cPanel vía SFTP (puerto 22) (se ejecuta en segundo plano)
 def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
-    """Sube el PDF generado a cPanel vía FTP para que sea accesible públicamente."""
+    """Sube el PDF generado a cPanel vía SFTP para que sea accesible públicamente."""
     ftp_host = os.getenv("FTP_HOST")
     ftp_user = os.getenv("FTP_USER")
     ftp_pass = os.getenv("FTP_PASS")
 
     if not all([ftp_host, ftp_user, ftp_pass]):
-        print("⚠️ FTP no configurado. El PDF solo se guardó localmente.")
+        print("⚠️ SFTP no configurado. El PDF solo se guardó localmente.")
         return
 
     try:
-        ftp = ftplib.FTP(ftp_host)
-        ftp.login(ftp_user, ftp_pass)
+        # Configurar conexión SFTP por el puerto 22
+        transport = paramiko.Transport((ftp_host, 22))
+        transport.connect(username=ftp_user, password=ftp_pass)
+        sftp = paramiko.SFTPClient.from_transport(transport)
 
         # Navegar a la carpeta raíz del sitio
-        ftp.cwd("/public_html/CERTIFICADOS_2026")
+        base_dir = "/public_html/CERTIFICADOS_2026"
+        try:
+            sftp.chdir(base_dir)
+        except IOError:
+            sftp.mkdir(base_dir)
+            sftp.chdir(base_dir)
 
         # Crear carpeta del curso si no existe
         try:
-            ftp.cwd(course_name)
-        except ftplib.error_perm:
-            ftp.mkd(course_name)
-            ftp.cwd(course_name)
+            sftp.chdir(course_name)
+        except IOError:
+            sftp.mkdir(course_name)
+            sftp.chdir(course_name)
 
         # Subir el archivo
-        with open(pdf_path, "rb") as f:
-            ftp.storbinary(f"STOR {filename}", f)
+        sftp.put(pdf_path, filename)
 
-        ftp.quit()
-        print(f"✅ PDF subido a cPanel: /CERTIFICADOS_2026/{course_name}/{filename}")
+        sftp.close()
+        transport.close()
+        print(f"✅ PDF subido a cPanel por SFTP: /CERTIFICADOS_2026/{course_name}/{filename}")
     except Exception as e:
-        print(f"❌ Error subiendo PDF por FTP: {e}")
+        print(f"❌ Error subiendo PDF por SFTP: {e}")
 
 # 📁 Base
 BASE_DIR = Path(__file__).resolve().parent
