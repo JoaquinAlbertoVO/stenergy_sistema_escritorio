@@ -41,30 +41,35 @@ app.add_middleware(
 # 📤 Función para subir PDFs al cPanel vía SFTP (puerto 22) (se ejecuta en segundo plano)
 def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
     """Sube el PDF generado a cPanel vía SFTP para que sea accesible públicamente."""
+    print("▶️ Iniciando subida por SFTP en segundo plano...", flush=True)
     ftp_host = os.getenv("FTP_HOST")
     ftp_user = os.getenv("FTP_USER")
     ftp_pass = os.getenv("FTP_PASS")
 
     if not all([ftp_host, ftp_user, ftp_pass]):
-        print("⚠️ SFTP no configurado. El PDF solo se guardó localmente.")
+        print("⚠️ SFTP no configurado (Faltan variables de entorno). El PDF solo se guardó localmente.", flush=True)
         return
 
     try:
+        print("▶️ Conectando a SFTP...", flush=True)
         # Configurar conexión SFTP por el puerto 22
         transport = paramiko.Transport((ftp_host, 22))
         transport.connect(username=ftp_user, password=ftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
+        print("▶️ Conexión SFTP exitosa. Navegando carpetas...", flush=True)
 
         # 1. Intentar entrar a public_html (si estamos en el home de cPanel)
         try:
             sftp.chdir("public_html")
         except IOError:
-            pass  # Si falla, asumimos que la cuenta SFTP ya está dentro de public_html
+            print("▶️ No se encontró public_html, asumiendo ruta raíz", flush=True)
+            pass
 
         # 2. Crear y entrar a la carpeta base de certificados
         try:
             sftp.chdir("CERTIFICADOS_2026")
         except IOError:
+            print("▶️ Creando carpeta CERTIFICADOS_2026", flush=True)
             sftp.mkdir("CERTIFICADOS_2026")
             sftp.chdir("CERTIFICADOS_2026")
 
@@ -72,17 +77,19 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
         try:
             sftp.chdir(course_name)
         except IOError:
+            print(f"▶️ Creando carpeta del curso {course_name}", flush=True)
             sftp.mkdir(course_name)
             sftp.chdir(course_name)
 
         # 4. Subir el archivo
+        print("▶️ Subiendo archivo PDF físico...", flush=True)
         sftp.put(pdf_path, filename)
 
         sftp.close()
         transport.close()
-        print(f"✅ PDF subido a cPanel por SFTP: /CERTIFICADOS_2026/{course_name}/{filename}")
+        print(f"✅ PDF subido a cPanel por SFTP: /CERTIFICADOS_2026/{course_name}/{filename}", flush=True)
     except Exception as e:
-        print(f"❌ Error subiendo PDF por SFTP: {e}")
+        print(f"❌ Error subiendo PDF por SFTP: {e}", flush=True)
 
 # 📁 Base
 BASE_DIR = Path(__file__).resolve().parent
