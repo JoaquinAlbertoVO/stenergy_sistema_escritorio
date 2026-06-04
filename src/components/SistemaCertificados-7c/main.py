@@ -55,22 +55,27 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
         transport.connect(username=ftp_user, password=ftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
 
-        # Navegar a la carpeta raíz del sitio
-        base_dir = "/public_html/CERTIFICADOS_2026"
+        # 1. Intentar entrar a public_html (si estamos en el home de cPanel)
         try:
-            sftp.chdir(base_dir)
+            sftp.chdir("public_html")
         except IOError:
-            sftp.mkdir(base_dir)
-            sftp.chdir(base_dir)
+            pass  # Si falla, asumimos que la cuenta SFTP ya está dentro de public_html
 
-        # Crear carpeta del curso si no existe
+        # 2. Crear y entrar a la carpeta base de certificados
+        try:
+            sftp.chdir("CERTIFICADOS_2026")
+        except IOError:
+            sftp.mkdir("CERTIFICADOS_2026")
+            sftp.chdir("CERTIFICADOS_2026")
+
+        # 3. Crear y entrar a la carpeta del curso
         try:
             sftp.chdir(course_name)
         except IOError:
             sftp.mkdir(course_name)
             sftp.chdir(course_name)
 
-        # Subir el archivo
+        # 4. Subir el archivo
         sftp.put(pdf_path, filename)
 
         sftp.close()
