@@ -38,60 +38,62 @@ app.add_middleware(
 )
 
 
-# 📤 Función para subir PDFs al cPanel vía SFTP (puerto 22) (se ejecuta en segundo plano)
+# 📤 Función para subir PDFs al cPanel vía SFTP (puerto 22)
 def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
     """Sube el PDF generado a cPanel vía SFTP para que sea accesible públicamente."""
     print("▶️ Iniciando subida por SFTP en segundo plano...", flush=True)
-    ftp_host = os.getenv("FTP_HOST")
-    ftp_user = os.getenv("FTP_USER")
-    ftp_pass = os.getenv("FTP_PASS")
+    sftp_host = os.getenv("SFTP_HOST")
+    sftp_port = int(os.getenv("SFTP_PORT", "22"))
+    sftp_user = os.getenv("SFTP_USER")
+    sftp_pass = os.getenv("SFTP_PASS")
+    remote_dir = os.getenv("REMOTE_DIR", "/public_html/stenergy-certificados")
 
-    if not all([ftp_host, ftp_user, ftp_pass]):
-        print("⚠️ SFTP no configurado (Faltan variables de entorno). El PDF solo se guardó localmente.", flush=True)
+    if not all([sftp_host, sftp_user, sftp_pass]):
+        print("⚠️ SFTP no configurado. El PDF solo se guardó localmente.", flush=True)
         return
 
-    BASE_FOLDER = "stenergy-certificados"
-
     try:
-        print("▶️ Conectando a SFTP...", flush=True)
-        transport = paramiko.Transport((ftp_host, 22))
-        transport.connect(username=ftp_user, password=ftp_pass)
+        print(f"▶️ Conectando a {sftp_host}:{sftp_port}...", flush=True)
+        transport = paramiko.Transport((sftp_host, sftp_port))
+        transport.connect(username=sftp_user, password=sftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
+        print(f"▶️ Conectado. Ruta base: {remote_dir}", flush=True)
 
-        # 1. Navegar a public_html
+        # Crear carpeta base y del curso con ruta absoluta
+        course_path = f"{remote_dir}/{course_name}"
+
+        # Crear remote_dir si no existe (carpeta a carpeta)
+        parts = remote_dir.strip("/").split("/")
+        current = ""
+        for part in parts:
+            current += f"/{part}"
+            try:
+                sftp.chdir(current)
+            except IOError:
+                print(f"▶️ Creando: {current}", flush=True)
+                sftp.mkdir(current)
+                sftp.chmod(current, 0o755)
+
+        # Crear carpeta del curso si no existe
         try:
-            sftp.chdir("public_html")
+            sftp.chdir(course_path)
         except IOError:
-            pass
+            print(f"▶️ Creando carpeta del curso: {course_path}", flush=True)
+            sftp.mkdir(course_path)
+            sftp.chmod(course_path, 0o755)
 
-        # 2. Crear carpeta base si no existe y asignar permisos públicos (755)
-        try:
-            sftp.chdir(BASE_FOLDER)
-        except IOError:
-            print(f"▶️ Creando carpeta base: {BASE_FOLDER}", flush=True)
-            sftp.mkdir(BASE_FOLDER)
-            sftp.chmod(BASE_FOLDER, 0o755)
-            sftp.chdir(BASE_FOLDER)
-
-        # 3. Crear carpeta del curso si no existe y asignar permisos públicos (755)
-        try:
-            sftp.chdir(course_name)
-        except IOError:
-            print(f"▶️ Creando carpeta del curso: {course_name}", flush=True)
-            sftp.mkdir(course_name)
-            sftp.chmod(course_name, 0o755)
-            sftp.chdir(course_name)
-
-        # 4. Subir el archivo PDF y asignar permisos de lectura pública (644)
-        print("▶️ Subiendo PDF...", flush=True)
-        sftp.put(pdf_path, filename)
-        sftp.chmod(filename, 0o644)
+        # Subir el archivo con ruta absoluta
+        remote_file = f"{course_path}/{filename}"
+        print(f"▶️ Subiendo PDF a: {remote_file}", flush=True)
+        sftp.put(pdf_path, remote_file)
+        sftp.chmod(remote_file, 0o644)
 
         sftp.close()
         transport.close()
-        print(f"✅ PDF subido: /{BASE_FOLDER}/{course_name}/{filename}", flush=True)
+        print(f"✅ PDF subido exitosamente: {remote_file}", flush=True)
     except Exception as e:
         print(f"❌ Error subiendo PDF por SFTP: {e}", flush=True)
+
 
 # 📁 Base
 BASE_DIR = Path(__file__).resolve().parent
