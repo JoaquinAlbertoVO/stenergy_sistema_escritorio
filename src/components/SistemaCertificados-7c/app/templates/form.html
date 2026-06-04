@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Generar certificado</title>
+    <link rel="stylesheet" href="/static/form.css" />
+  </head>
+  <body>
+
+    <div class="header">
+      <div class="logo-block">
+        <span class="logo-st">ST</span>
+        <span class="logo-energy">Energy</span>
+      </div>
+      <div class="header-title">
+        <h1>Generador de Certificados</h1>  
+        <p>Certificado de Participación</p>
+      </div>
+    </div>
+
+    <div class="accent-strip"></div>
+
+    <div class="card">
+      <form method="post" action="/generate">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="student_name">Nombres y apellidos</label>
+            <input type="text" id="student_name" name="student_name" required />
+          </div>
+          <div class="form-group">
+            <label for="dni">DNI</label>
+            <input type="text" id="dni" name="dni" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="academic_hours">Horas académicas</label>
+            <input type="text" id="academic_hours" name="academic_hours" placeholder="24 horas académicas" required />
+          </div>
+          <div class="form-group">
+            <label for="issue_date">Fecha de emisión</label>
+            <input type="text" id="issue_date" name="issue_date" placeholder="Lima, 28 de marzo del 2026." required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="course_name">Curso</label>
+          <select id="course_name" name="course_name" required>
+            <option value="">— Selecciona un curso —</option>
+            <option value="ANALISIS_DE_FACTURACIÓN">Análisis de Facturación</option>
+            <option value="ANALIZADOR_DE_REDES">Analizador de Redes</option>
+            <option value="BANCO_DE_CONDENSADORES">Banco de Condensadores</option>
+            <option value="CANALIZACION_TUBERIA_CONDUIT">Canalización Tubería Conduit</option>
+            <option value="DETECTOR_DE_CABLES">Detector de Cables</option>
+            <option value="EMPALME_AUTOCONTRAIBLE">Empalme Autocontraible</option>
+            <option value="EMPALME_TERMOCONTRAIBLE">Empalme Termocontraible</option>
+            <option value="EXPENDIENTE_MT">Expendiente MT</option>
+            <option value="MANTENIMIENTO_DE_SUBESTACIONES">Mantenimiento de Subestaciones</option>
+            <option value="PROTECCIONES_SISTEMAS">Protecciones Sistemas</option>
+            <option value="TERMINACION_AUTOCONTRAIBLE">Terminación Autocontraible</option>
+            <option value="TERMINACIONES_TERMOCONTRAIBLES">Terminaciones Termocontraibles</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="description_text">Texto descriptivo</label>
+          <textarea id="description_text" name="description_text" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="registry_number">Número de registro</label>
+          <input type="text" id="registry_number" name="registry_number" placeholder="cert-2026-00001" required />
+        </div>
+
+        <button type="submit" class="btn-generate">Generar certificado</button>
+
+      </form>
+
+      {% if error %}
+      <div class="result error">Error: {{ error }}</div>
+      {% endif %}
+
+      {% if success %}
+      <div class="result success-box">
+        <div class="success-label">✓ Certificado generado correctamente</div>
+        <p><strong>Número de registro:</strong> {{ registry_number }}</p>
+        <p><strong>URL pública:</strong> <a href="{{ public_url }}" target="_blank">{{ public_url }}</a></p>
+        <p><strong>Descargar PDF:</strong> <a href="{{ download_url }}" target="_blank">Abrir / Descargar certificado</a></p>
+      </div>
+      {% endif %}
+
+    </div>
+
+  </body>
+</html>

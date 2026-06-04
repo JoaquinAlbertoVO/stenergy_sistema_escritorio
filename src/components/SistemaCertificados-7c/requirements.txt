@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+jinja2
+qrcode
+pillow
+reportlab
+python-dotenv
+sqlalchemy
+python-multipart
+gunicorn

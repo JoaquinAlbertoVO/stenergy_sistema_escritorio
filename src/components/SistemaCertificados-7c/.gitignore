@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+generated/pdf/*.pdf
+generated/qr/*.png
+stenergy.db
+.env
