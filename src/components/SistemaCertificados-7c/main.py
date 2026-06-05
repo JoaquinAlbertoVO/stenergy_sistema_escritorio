@@ -22,6 +22,29 @@ from fastapi import Depends
 
 models.Base.metadata.create_all(bind=engine)
 
+# 🚀 Crear usuario administrador por defecto si la base de datos está vacía
+def init_db():
+    db = SessionLocal()
+    try:
+        if db.query(models.User).count() == 0:
+            print("Base de datos vacía. Creando usuario admin por defecto...", flush=True)
+            admin_user = models.User(
+                id="u_admin_inicial",
+                name="Administrador",
+                username="admin",
+                password="admin123", # Contraseña por defecto
+                role="admin"
+            )
+            db.add(admin_user)
+            db.commit()
+            print("Usuario admin creado exitosamente.", flush=True)
+    except Exception as e:
+        print(f"Error al inicializar admin: {e}", flush=True)
+    finally:
+        db.close()
+
+init_db()
+
 app = FastAPI()
 
 # 🌐 CORS - Permitir conexiones desde React (local y producción)
