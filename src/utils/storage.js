@@ -36,20 +36,27 @@ let _salesCache = null;
 let _coursesCache = null;
 let _calendarCache = null;
 
-export function invalidateCache(type) {
-  if (!type || type === 'sales') _salesCache = null;
-  if (!type || type === 'courses') _coursesCache = null;
-  if (!type || type === 'calendar') _calendarCache = null;
+export async function preloadData() {
+  try {
+    _salesCache = await apiFetch('/api/sales').catch(() => []);
+    _coursesCache = await apiFetch('/api/courses').catch(() => []);
+    _calendarCache = await apiFetch('/api/calendar').catch(() => []);
+  } catch (e) {
+    console.error("Error preloading data", e);
+  }
+}
+
+export async function invalidateCache(type) {
+  if (!type || type === 'sales') _salesCache = await apiFetch('/api/sales').catch(() => []);
+  if (!type || type === 'courses') _coursesCache = await apiFetch('/api/courses').catch(() => []);
+  if (!type || type === 'calendar') _calendarCache = await apiFetch('/api/calendar').catch(() => []);
 }
 
 // ============================================
 // Sales
 // ============================================
-export async function getSales() {
-  if (_salesCache) return _salesCache;
-  const sales = await apiFetch('/api/sales');
-  _salesCache = sales;
-  return sales;
+export function getSales() {
+  return _salesCache || [];
 }
 
 export async function addSale(sale) {
@@ -66,7 +73,7 @@ export async function addSale(sale) {
     method: 'POST',
     body: JSON.stringify(sale),
   });
-  invalidateCache('sales');
+  await invalidateCache('sales');
   return result;
 }
 
@@ -83,23 +90,20 @@ export async function updateSale(id, updates) {
     method: 'PUT',
     body: JSON.stringify(updates),
   });
-  invalidateCache('sales');
+  await invalidateCache('sales');
   return result;
 }
 
 export async function deleteSale(id) {
   await apiFetch(`/api/sales/${id}`, { method: 'DELETE' });
-  invalidateCache('sales');
+  await invalidateCache('sales');
 }
 
 // ============================================
 // Courses
 // ============================================
-export async function getCourses() {
-  if (_coursesCache) return _coursesCache;
-  const courses = await apiFetch('/api/courses');
-  _coursesCache = courses;
-  return courses;
+export function getCourses() {
+  return _coursesCache || [];
 }
 
 export async function addCourse(course) {
@@ -108,7 +112,7 @@ export async function addCourse(course) {
     method: 'POST',
     body: JSON.stringify(course),
   });
-  invalidateCache('courses');
+  await invalidateCache('courses');
   return result;
 }
 
@@ -117,23 +121,20 @@ export async function updateCourse(id, updates) {
     method: 'PUT',
     body: JSON.stringify(updates),
   });
-  invalidateCache('courses');
+  await invalidateCache('courses');
   return result;
 }
 
 export async function deleteCourse(id) {
   await apiFetch(`/api/courses/${id}`, { method: 'DELETE' });
-  invalidateCache('courses');
+  await invalidateCache('courses');
 }
 
 // ============================================
 // Calendar
 // ============================================
-export async function getCalendarData() {
-  if (_calendarCache) return _calendarCache;
-  const calendar = await apiFetch('/api/calendar');
-  _calendarCache = calendar;
-  return calendar;
+export function getCalendarData() {
+  return _calendarCache || [];
 }
 
 export async function addCalendarEntry(entry) {
@@ -142,7 +143,7 @@ export async function addCalendarEntry(entry) {
     method: 'POST',
     body: JSON.stringify(entry),
   });
-  invalidateCache('calendar');
+  await invalidateCache('calendar');
   return result;
 }
 
@@ -151,13 +152,13 @@ export async function updateCalendarEntry(id, updates) {
     method: 'PUT',
     body: JSON.stringify(updates),
   });
-  invalidateCache('calendar');
+  await invalidateCache('calendar');
   return result;
 }
 
 export async function deleteCalendarEntry(id) {
   await apiFetch(`/api/calendar/${id}`, { method: 'DELETE' });
-  invalidateCache('calendar');
+  await invalidateCache('calendar');
 }
 
 // ============================================
@@ -195,8 +196,8 @@ export function clearCurrentUser() {
 // ============================================
 // Stats (calculada a partir de datos de la API)
 // ============================================
-export async function getSalesStats(userId = null) {
-  let sales = await getSales();
+export function getSalesStats(userId = null) {
+  let sales = getSales();
   if (userId) {
     sales = sales.filter(s => s.sellerId === userId);
   }
@@ -223,8 +224,8 @@ export async function getSalesStats(userId = null) {
 // ============================================
 // Helper: Count courses on date (for Calendar)
 // ============================================
-export async function getCoursesOnDate(dateStr) {
-  const calendar = await getCalendarData();
+export function getCoursesOnDate(dateStr) {
+  const calendar = getCalendarData();
   return calendar.filter(entry => {
     return dateStr >= entry.startDate && dateStr <= entry.endDate;
   });

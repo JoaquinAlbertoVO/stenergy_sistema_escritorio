@@ -9,44 +9,51 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [recentSales, setRecentSales] = useState([]);
   const [animatedValues, setAnimatedValues] = useState({});
+  const [allSalesData, setAllSalesData] = useState([]);
 
   useEffect(() => {
-    const userId = isAdmin() ? null : user.id;
-    const salesStats = getSalesStats(userId);
-    setStats(salesStats);
+    const loadData = async () => {
+      const userId = isAdmin() ? null : user.id;
+      const salesStats = await getSalesStats(userId);
+      setStats(salesStats);
 
-    const allSales = getSales();
-    const filtered = isAdmin() ? allSales : allSales.filter(s => s.sellerId === user.id);
-    setRecentSales(filtered.slice(-5).reverse());
+      const allSales = await getSales();
+      const filtered = isAdmin() ? allSales : allSales.filter(s => s.sellerId === user.id);
+      
+      setAllSalesData(filtered);
+      setRecentSales(filtered.slice(-5).reverse());
 
-    // Animate numbers
-    const targets = {
-      totalSales: salesStats.totalSales,
-      totalRevenue: salesStats.totalRevenue,
-      totalDebt: salesStats.totalDebt,
-      pendingCertificates: salesStats.pendingCertificates
+      // Animate numbers
+      const targets = {
+        totalSales: salesStats.totalSales,
+        totalRevenue: salesStats.totalRevenue,
+        totalDebt: salesStats.totalDebt,
+        pendingCertificates: salesStats.pendingCertificates
+      };
+
+      const duration = 1200;
+      const startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        const current = {};
+        Object.keys(targets).forEach(key => {
+          current[key] = Math.round(targets[key] * eased);
+        });
+        setAnimatedValues(current);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+
+      requestAnimationFrame(animate);
     };
 
-    const duration = 1200;
-    const startTime = Date.now();
-    
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-
-      const current = {};
-      Object.keys(targets).forEach(key => {
-        current[key] = Math.round(targets[key] * eased);
-      });
-      setAnimatedValues(current);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
+    loadData();
   }, [user, isAdmin]);
 
   if (!stats) return null;
@@ -118,8 +125,7 @@ function Dashboard() {
     }
   };
 
-  const allSales = getSales();
-  const filteredSales = isAdmin() ? allSales : allSales.filter(s => s.sellerId === user.id);
+  const filteredSales = allSalesData;
 
   // Sales by seller
   const sellerStats = {};

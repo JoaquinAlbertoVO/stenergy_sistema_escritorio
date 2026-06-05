@@ -121,3 +121,15 @@ class Sale(SaleBase):
     
     class Config:
         from_attributes = True
+
+# ---- WordPress Integration ----
+class WPEnrollRequest(BaseModel):
+    email: str
+    name: str
+    course_id: str
+    dni: str
+
+class WPLinkCertificateRequest(BaseModel):
+    public_url: str
+    course_id: str
+    dni: str

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, needsMigration, migrateLocalStorageToBackend, invalidateCache } from '../utils/storage';
+import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, needsMigration, migrateLocalStorageToBackend, invalidateCache, preloadData } from '../utils/storage';
 
 const AuthContext = createContext(null);
 
@@ -16,12 +16,13 @@ export function AuthProvider({ children }) {
         console.log('🔄 Migrando datos de localStorage al backend...');
         const result = await migrateLocalStorageToBackend();
         console.log('📦 Resultado de migración:', result.message);
-        invalidateCache();
+        await invalidateCache();
       }
 
       const savedUser = getCurrentUser();
       if (savedUser) {
         setUser(savedUser);
+        await preloadData();
       }
       setLoading(false);
     };
@@ -42,6 +43,7 @@ export function AuthProvider({ children }) {
         const userData = await response.json();
         setUser(userData);
         setCurrentUser(userData);
+        await preloadData();
         return { success: true, user: userData };
       } else {
         return { success: false, error: 'Credenciales inválidas' };
@@ -57,6 +59,7 @@ export function AuthProvider({ children }) {
           const userData = { id: found.id, name: found.name, username: found.username, role: found.role };
           setUser(userData);
           setCurrentUser(userData);
+          await preloadData();
           return { success: true, user: userData };
         }
       }
