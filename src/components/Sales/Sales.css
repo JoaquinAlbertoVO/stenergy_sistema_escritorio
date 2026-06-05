@@ -441,6 +441,12 @@
   color: var(--color-danger);
 }
 
+.form-success {
+  font-size: 0.72rem;
+  color: var(--color-success);
+  animation: fadeInUp 0.3s ease-out;
+}
+
 .form-summary {
   display: flex;
   gap: 24px;

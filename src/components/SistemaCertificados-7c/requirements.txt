@@ -9,3 +9,4 @@ sqlalchemy
 python-multipart==0.0.18
 paramiko==5.0.0
 gunicorn
+psycopg2-binary

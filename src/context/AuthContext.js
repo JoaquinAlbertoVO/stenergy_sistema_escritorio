@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData } from '../utils/storage';
-import { loginUser as loginWP, logoutUser as logoutWP } from '../services/authService';
-import { getCourses as getWPCourses } from '../services/courseService';
+import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, needsMigration, migrateLocalStorageToBackend, invalidateCache } from '../utils/storage';
 
 const AuthContext = createContext(null);
 
@@ -13,42 +11,12 @@ export function AuthProvider({ children }) {
     const loadApp = async () => {
       initializeData();
 
-      try {
-        // 1. Descargamos los cursos reales de WordPress
-        const wpCourses = await getWPCourses();
-        if (wpCourses && wpCourses.length > 0) {
-          // Extraemos los cursos locales actuales para no perder la configuración de certificados
-          const localData = localStorage.getItem('st_energy_courses');
-          const localCourses = localData ? JSON.parse(localData) : [];
-
-          // 2. Los transformamos al formato que tu React espera, fusionando con lo que ya tenías
-          const mappedCourses = wpCourses.map(wp => {
-            const existing = localCourses.find(c => c.id === wp.id.toString());
-            return {
-              id: wp.id.toString(),
-              name: wp.title.rendered,
-              // Quitamos entidades HTML como &#8211; del nombre corto
-              shortName: wp.title.rendered.replace(/&#[0-9]+;/g, '-').substring(0, 20),
-              duration: existing?.duration || 'Asíncrono',
-              price: existing?.price || 0, 
-              color: existing?.color || '#00d4aa',
-              icon: existing?.icon || '🎓',
-              courseCode: existing?.courseCode || '',
-              cpanelFolder: existing?.cpanelFolder || '',
-              academicHours: existing?.academicHours || '120 horas académicas',
-              descriptionText: existing?.descriptionText || 'Por haber aprobado satisfactoriamente el curso.'
-            };
-          });
-
-          // También agregamos los cursos creados manualmente de forma local que no existen en WP (si los hubiera)
-          const localOnlyCourses = localCourses.filter(lc => !mappedCourses.find(mc => mc.id === lc.id));
-          const finalCourses = [...mappedCourses, ...localOnlyCourses];
-
-          // 3. Sobrescribimos el catálogo local preservando los datos extra
-          localStorage.setItem('st_energy_courses', JSON.stringify(finalCourses));
-        }
-      } catch (error) {
-        console.error("No se pudieron sincronizar los cursos de WP", error);
+      // Migrar datos de localStorage al backend si es necesario
+      if (needsMigration()) {
+        console.log('🔄 Migrando datos de localStorage al backend...');
+        const result = await migrateLocalStorageToBackend();
+        console.log('📦 Resultado de migración:', result.message);
+        invalidateCache();
       }
 
       const savedUser = getCurrentUser();
@@ -62,22 +30,43 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (username, password) => {
-    const result = await loginWP(username, password);
-    if (result.success) {
-      // Como WP no nos devuelve el rol 'admin' o 'asesor' por defecto en el JWT (a menos que se configure),
-      // temporalmente asignamos 'admin' o puedes adaptarlo después.
-      const userData = { ...result.user, role: 'admin' };
-      setUser(userData);
-      setCurrentUser(userData); // Mantiene compatibilidad con tu sistema actual
-      return { success: true, user: userData };
+    try {
+      // Intentar autenticar con el backend
+      const response = await fetch(`${process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000'}/api/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setCurrentUser(userData);
+        return { success: true, user: userData };
+      } else {
+        return { success: false, error: 'Credenciales inválidas' };
+      }
+    } catch (error) {
+      console.error('Error de autenticación:', error);
+      // Fallback: intentar con usuarios locales (para compatibilidad)
+      const localUsers = localStorage.getItem('st_energy_users');
+      if (localUsers) {
+        const users = JSON.parse(localUsers);
+        const found = users.find(u => u.username === username && u.password === password);
+        if (found) {
+          const userData = { id: found.id, name: found.name, username: found.username, role: found.role };
+          setUser(userData);
+          setCurrentUser(userData);
+          return { success: true, user: userData };
+        }
+      }
+      return { success: false, error: 'No se pudo conectar al servidor' };
     }
-    return { success: false, error: result.error };
   };
 
   const logout = () => {
     setUser(null);
     clearCurrentUser();
-    logoutWP(); // Limpia el token JWT
   };
 
   const isAdmin = () => user?.role === 'admin';

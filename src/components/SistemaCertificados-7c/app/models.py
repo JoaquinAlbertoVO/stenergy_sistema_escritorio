@@ -32,6 +32,9 @@ class CalendarEntry(Base):
     courseName = Column(String)
     startDate = Column(String)
     endDate = Column(String)
+    selectedDates = Column(JSON, nullable=True)
+    color = Column(String, nullable=True)
+    dailyDetails = Column(JSON, nullable=True)
 
 class Sale(Base):
     __tablename__ = "sales"

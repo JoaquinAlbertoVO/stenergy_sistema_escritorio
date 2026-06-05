@@ -15,7 +15,7 @@ class User(UserBase):
     id: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---- Course ----
 class CourseBase(BaseModel):
@@ -35,7 +35,7 @@ class Course(CourseBase):
     id: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---- Calendar ----
 class CalendarEntryBase(BaseModel):
@@ -43,6 +43,9 @@ class CalendarEntryBase(BaseModel):
     courseName: str
     startDate: str
     endDate: str
+    selectedDates: Optional[List[str]] = None
+    color: Optional[str] = None
+    dailyDetails: Optional[Any] = None
 
 class CalendarEntryCreate(CalendarEntryBase):
     id: str
@@ -51,7 +54,7 @@ class CalendarEntry(CalendarEntryBase):
     id: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---- Payment ----
 class PaymentBase(BaseModel):
@@ -68,7 +71,7 @@ class Payment(PaymentBase):
     saleId: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---- Sale ----
 class SaleBase(BaseModel):
@@ -117,4 +120,4 @@ class Sale(SaleBase):
     payments: List[Payment] = []
     
     class Config:
-        orm_mode = True
+        from_attributes = True

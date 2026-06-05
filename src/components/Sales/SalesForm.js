@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { addSale, updateSale, getCourses, getCalendarData } from '../../utils/storage';
+import { addSale, updateSale, getCourses, getCalendarData, getSales } from '../../utils/storage';
 import { enrollStudent } from '../../services/courseService';
 
 function SalesForm({ saleToEdit, onClose, onSave }) {
@@ -19,7 +19,9 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
     paymentDate: saleToEdit?.date || new Date().toISOString().split('T')[0]
   });
   const [errors, setErrors] = useState({});
+  const [dniAutoFilled, setDniAutoFilled] = useState(false);
   const coursesList = getCourses();
+  const allSales = getSales();
   
   // Filter courses to only show those scheduled in the calendar
   const calendarEntries = getCalendarData();
@@ -32,6 +34,21 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
       
+      // 🔍 Auto-completar datos del cliente cuando el DNI coincide con una venta existente
+      if (name === 'clientDni' && value.trim().length >= 7 && !saleToEdit) {
+        const existingSale = allSales.find(s => s.clientDni === value.trim());
+        if (existingSale) {
+          newData.clientName = existingSale.clientName || '';
+          newData.clientPhone = existingSale.clientPhone || '';
+          newData.clientEmail = existingSale.clientEmail || '';
+          setDniAutoFilled(true);
+        } else {
+          setDniAutoFilled(false);
+        }
+      } else if (name === 'clientDni') {
+        setDniAutoFilled(false);
+      }
+
       // Auto-fill price when course is selected
       if (name === 'courseId') {
         const course = availableCourses.find(c => c.id === value);
@@ -71,6 +88,16 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
     if (formData.paidAmount && isNaN(formData.paidAmount)) newErrors.paidAmount = 'Monto inválido';
     if (Number(formData.paidAmount) > Number(formData.totalAmount)) newErrors.paidAmount = 'No puede ser mayor al total';
     if (!formData.modality) newErrors.modality = 'Selecciona una modalidad';
+
+    // 🚫 Validar duplicado: mismo DNI + mismo curso (solo al crear, no al editar)
+    if (!saleToEdit && formData.clientDni.trim() && formData.courseId) {
+      const duplicate = allSales.find(
+        s => s.clientDni === formData.clientDni.trim() && s.courseId === formData.courseId
+      );
+      if (duplicate) {
+        newErrors.courseId = `Este alumno (DNI: ${formData.clientDni}) ya está inscrito en este curso`;
+      }
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -172,7 +199,10 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
                   placeholder="12345678"
                   maxLength="8"
                 />
-                {errors.clientDni && <span className="form-error">{errors.clientDni}</span>}
+                <div className="form-feedback">
+                  {errors.clientDni ? <span className="form-error">{errors.clientDni}</span> : null}
+                  {dniAutoFilled ? <span className="form-success">✅ Datos autocompletados</span> : null}
+                </div>
               </div>
               <div className={`form-group ${errors.clientPhone ? 'error' : ''}`}>
                 <label>Teléfono</label>
