@@ -36,50 +36,43 @@ export const getCourseById = async (courseId) => {
   }
 };
 
-// Inscribir a un usuario en un curso (Usa el proxy de nuestro backend)
+// Inscribir a un usuario en un curso (Llamada directa a WordPress)
 export const enrollStudent = async (email, name, courseId, dni) => {
   try {
-    const response = await apiFetch('/api/wp/enroll', {
-      method: 'POST',
-      body: JSON.stringify({
-        email,
-        name,
-        course_id: courseId,
-        dni
-      })
+    const response = await api.post('/wp-json/stenergy/v1/enroll', {
+      email,
+      name,
+      course_id: courseId,
+      dni
     });
     
-    // Si la API interna devuelve un error desde WordPress, vendrá en response.error o success: false
-    if (response.error || response.message === 'Lo siento, no tienes permisos para hacer eso.') {
-       return { success: false, error: response.error || response.message };
+    if (response.data?.error || response.data?.message === 'Lo siento, no tienes permisos para hacer eso.') {
+       return { success: false, error: response.data.error || response.data.message };
     }
     
-    return { success: true, data: response };
+    return { success: true, data: response.data };
   } catch (error) {
     console.error(`Error inscribiendo al estudiante ${email}:`, error);
-    return { success: false, error: error.message || 'Error en la inscripción a TutorLMS' };
+    return { success: false, error: error.response?.data?.message || error.message || 'Error en la inscripción a TutorLMS' };
   }
 };
 
-// Enlazar el certificado ya generado en el servidor al perfil del alumno en WordPress
+// Enlazar el certificado ya generado en el servidor al perfil del alumno en WordPress (Llamada directa a WordPress)
 export const linkCertificateToWP = async (publicUrl, courseId, dni) => {
   try {
-    const response = await apiFetch('/api/wp/link-certificate', {
-      method: 'POST',
-      body: JSON.stringify({
-        public_url: publicUrl,
-        course_id: courseId,
-        dni
-      })
+    const response = await api.post('/wp-json/stenergy/v1/link-certificate', {
+      public_url: publicUrl,
+      course_id: courseId,
+      dni
     });
     
-    if (response.error) {
-       return { success: false, error: response.error };
+    if (response.data?.error) {
+       return { success: false, error: response.data.error };
     }
     
-    return { success: true, data: response };
+    return { success: true, data: response.data };
   } catch (error) {
     console.error(`Error enlazando certificado a WP:`, error);
-    return { success: false, error: error.message || 'Error enlazando certificado a WP' };
+    return { success: false, error: error.response?.data?.message || error.message || 'Error enlazando certificado a WP' };
   }
 };
