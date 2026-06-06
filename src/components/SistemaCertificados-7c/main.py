@@ -96,12 +96,15 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
         except Exception:
             print("📁 No se pudo obtener el directorio actual (normal en algunos servidores).", flush=True)
 
-        # 2. Navegar a public_html
+        # 2. Navegar a public_html usando ruta absoluta
         try:
-            sftp.chdir("public_html")
-            print("✅ Navegado a public_html", flush=True)
+            sftp.chdir("/home/stenergyedu/public_html")
+            print("✅ Navegado a /home/stenergyedu/public_html", flush=True)
         except IOError as e:
-            print(f"⚠️ No se pudo navegar a public_html: {e} — continuando desde raíz.", flush=True)
+            print(f"❌ No se pudo navegar a /home/stenergyedu/public_html: {e}", flush=True)
+            sftp.close()
+            transport.close()
+            return
 
         # 3. Crear carpeta base si no existe
         try:
