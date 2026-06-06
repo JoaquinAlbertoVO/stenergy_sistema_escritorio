@@ -72,6 +72,8 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
     sftp_user = os.getenv("SFTP_USER")
     sftp_pass = os.getenv("SFTP_PASS")
 
+    print(f"🔧 SFTP config → host={sftp_host}, port={sftp_port}, user={sftp_user}", flush=True)
+
     if not all([sftp_host, sftp_user, sftp_pass]):
         print("⚠️ SFTP no configurado. El PDF solo se guardó localmente.", flush=True)
         return
@@ -79,45 +81,66 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
     BASE_FOLDER = "CERTIFICADOS_2026"
 
     try:
-        print("▶️ Conectando a SFTP...", flush=True)
-        transport = paramiko.Transport((sftp_host, sftp_port))
+        import socket
+        print("▶️ Conectando a SFTP (timeout=15s)...", flush=True)
+        sock = socket.create_connection((sftp_host, sftp_port), timeout=15)
+        transport = paramiko.Transport(sock)
         transport.connect(username=sftp_user, password=sftp_pass)
+        print("✅ Autenticación SFTP exitosa.", flush=True)
         sftp = paramiko.SFTPClient.from_transport(transport)
 
-        # 1. Navegar a public_html
+        # 1. Verificar directorio actual
+        try:
+            cwd = sftp.getcwd()
+            print(f"📁 Directorio inicial en servidor: {cwd}", flush=True)
+        except Exception:
+            print("📁 No se pudo obtener el directorio actual (normal en algunos servidores).", flush=True)
+
+        # 2. Navegar a public_html
         try:
             sftp.chdir("public_html")
-        except IOError:
-            pass
+            print("✅ Navegado a public_html", flush=True)
+        except IOError as e:
+            print(f"⚠️ No se pudo navegar a public_html: {e} — continuando desde raíz.", flush=True)
 
-        # 2. Crear carpeta base si no existe, asignar permisos 755
+        # 3. Crear carpeta base si no existe
         try:
             sftp.chdir(BASE_FOLDER)
+            print(f"✅ Carpeta base '{BASE_FOLDER}' ya existe.", flush=True)
         except IOError:
             print(f"▶️ Creando carpeta base: {BASE_FOLDER}", flush=True)
             sftp.mkdir(BASE_FOLDER)
             sftp.chmod(BASE_FOLDER, 0o755)
             sftp.chdir(BASE_FOLDER)
+            print(f"✅ Carpeta base '{BASE_FOLDER}' creada.", flush=True)
 
-        # 3. Crear carpeta del curso si no existe, asignar permisos 755
+        # 4. Crear carpeta del curso si no existe
         try:
             sftp.chdir(course_name)
+            print(f"✅ Carpeta del curso '{course_name}' ya existe.", flush=True)
         except IOError:
             print(f"▶️ Creando carpeta del curso: {course_name}", flush=True)
             sftp.mkdir(course_name)
             sftp.chmod(course_name, 0o755)
             sftp.chdir(course_name)
+            print(f"✅ Carpeta del curso '{course_name}' creada.", flush=True)
 
-        # 4. Subir el PDF y asignar permisos de lectura pública 644
-        print("▶️ Subiendo PDF...", flush=True)
+        # 5. Subir el PDF
+        print(f"▶️ Subiendo PDF '{filename}'...", flush=True)
         sftp.put(pdf_path, filename)
         sftp.chmod(filename, 0o644)
+        print(f"✅ PDF subido exitosamente: /public_html/{BASE_FOLDER}/{course_name}/{filename}", flush=True)
 
         sftp.close()
         transport.close()
-        print(f"✅ PDF subido: /{BASE_FOLDER}/{course_name}/{filename}", flush=True)
+        print("🔒 Conexión SFTP cerrada correctamente.", flush=True)
+
+    except socket.timeout:
+        print(f"❌ SFTP: Timeout al conectar a {sftp_host}:{sftp_port} — El puerto puede estar bloqueado en Render.", flush=True)
+    except paramiko.AuthenticationException:
+        print("❌ SFTP: Error de autenticación — Verifica SFTP_USER y SFTP_PASS en Render.", flush=True)
     except Exception as e:
-        print(f"❌ Error subiendo PDF por SFTP: {e}", flush=True)
+        print(f"❌ Error subiendo PDF por SFTP: {type(e).__name__}: {e}", flush=True)
 
 
 # 📁 Base
