@@ -22,7 +22,7 @@ from fastapi import Depends
 
 models.Base.metadata.create_all(bind=engine)
 
-# 🚀 Crear usuario administrador por defecto si la base de datos está vacía
+# RUN Crear usuario administrador por defecto si la base de datos está vacía
 def init_db():
     db = SessionLocal()
     try:
@@ -63,90 +63,42 @@ app.add_middleware(
 )
 
 
-# 📤 Función para subir PDFs al cPanel vía SFTP (puerto 22)
-def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
-    """Sube el PDF generado a cPanel vía SFTP para que sea accesible públicamente."""
-    print("▶️ Iniciando subida por SFTP en segundo plano...", flush=True)
-    sftp_host = os.getenv("SFTP_HOST")
-    sftp_port = int(os.getenv("SFTP_PORT", "22"))
-    sftp_user = os.getenv("SFTP_USER")
-    sftp_pass = os.getenv("SFTP_PASS")
+# 📤 Función para subir PDFs a Supabase Storage
+def upload_pdf_to_supabase(pdf_path: str, course_name: str, filename: str):
+    """Sube el PDF generado a Supabase Storage para que sea accesible públicamente."""
+    print("> Iniciando subida a Supabase en segundo plano...", flush=True)
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_KEY")
 
-    print(f"🔧 SFTP config → host={sftp_host}, port={sftp_port}, user={sftp_user}", flush=True)
-
-    if not all([sftp_host, sftp_user, sftp_pass]):
-        print("⚠️ SFTP no configurado. El PDF solo se guardó localmente.", flush=True)
+    if not all([supabase_url, supabase_key]):
+        print("WARN Supabase no configurado. El PDF solo se guardó localmente.", flush=True)
         return
 
-    BASE_FOLDER = "CERTIFICADOS_2026"
-
     try:
-        import socket
-        print("▶️ Conectando a SFTP (timeout=15s)...", flush=True)
-        sock = socket.create_connection((sftp_host, sftp_port), timeout=15)
-        transport = paramiko.Transport(sock)
-        transport.connect(username=sftp_user, password=sftp_pass)
-        print("✅ Autenticación SFTP exitosa.", flush=True)
-        sftp = paramiko.SFTPClient.from_transport(transport)
-
-        # 1. Verificar directorio actual
-        try:
-            cwd = sftp.getcwd()
-            print(f"📁 Directorio inicial en servidor: {cwd}", flush=True)
-        except Exception:
-            print("📁 No se pudo obtener el directorio actual (normal en algunos servidores).", flush=True)
-
-        # 2. Navegar a public_html usando ruta absoluta
-        try:
-            sftp.chdir("/home/stenergyedu/public_html")
-            print("✅ Navegado a /home/stenergyedu/public_html", flush=True)
-        except IOError as e:
-            print(f"❌ No se pudo navegar a /home/stenergyedu/public_html: {e}", flush=True)
-            sftp.close()
-            transport.close()
-            return
-
-        # 3. Crear carpeta base si no existe
-        try:
-            sftp.chdir(BASE_FOLDER)
-            print(f"✅ Carpeta base '{BASE_FOLDER}' ya existe.", flush=True)
-        except IOError:
-            print(f"▶️ Creando carpeta base: {BASE_FOLDER}", flush=True)
-            sftp.mkdir(BASE_FOLDER)
-            sftp.chmod(BASE_FOLDER, 0o755)
-            sftp.chdir(BASE_FOLDER)
-            print(f"✅ Carpeta base '{BASE_FOLDER}' creada.", flush=True)
-
-        # 4. Crear carpeta del curso si no existe
-        try:
-            sftp.chdir(course_name)
-            print(f"✅ Carpeta del curso '{course_name}' ya existe.", flush=True)
-        except IOError:
-            print(f"▶️ Creando carpeta del curso: {course_name}", flush=True)
-            sftp.mkdir(course_name)
-            sftp.chmod(course_name, 0o755)
-            sftp.chdir(course_name)
-            print(f"✅ Carpeta del curso '{course_name}' creada.", flush=True)
-
-        # 5. Subir el PDF
-        print(f"▶️ Subiendo PDF '{filename}'...", flush=True)
-        sftp.put(pdf_path, filename)
-        sftp.chmod(filename, 0o644)
-        print(f"✅ PDF subido exitosamente: /public_html/{BASE_FOLDER}/{course_name}/{filename}", flush=True)
-
-        sftp.close()
-        transport.close()
-        print("🔒 Conexión SFTP cerrada correctamente.", flush=True)
-
-    except socket.timeout:
-        print(f"❌ SFTP: Timeout al conectar a {sftp_host}:{sftp_port} — El puerto puede estar bloqueado en Render.", flush=True)
-    except paramiko.AuthenticationException:
-        print("❌ SFTP: Error de autenticación — Verifica SFTP_USER y SFTP_PASS en Render.", flush=True)
+        from supabase import create_client, Client
+        supabase: Client = create_client(supabase_url, supabase_key)
+        
+        # Sanitizar el nombre del curso
+        safe_course_name = "".join(c for c in course_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        storage_path = f"{safe_course_name}/{filename}"
+        
+        print(f"> Subiendo PDF '{filename}' al bucket 'certificados'...", flush=True)
+        
+        with open(pdf_path, 'rb') as f:
+            # Subir archivo (sobrescribe si existe)
+            supabase.storage.from_("certificados").upload(
+                file=f,
+                path=storage_path,
+                file_options={"content-type": "application/pdf", "upsert": "true"}
+            )
+            
+        print(f"OK PDF subido exitosamente a Supabase: {storage_path}", flush=True)
+        
     except Exception as e:
-        print(f"❌ Error subiendo PDF por SFTP: {type(e).__name__}: {e}", flush=True)
+        print(f"ERROR Error subiendo PDF a Supabase: {type(e).__name__}: {e}", flush=True)
 
 
-# 📁 Base
+# DIR Base
 BASE_DIR = Path(__file__).resolve().parent
 
 # 🔥 Configuración Jinja
@@ -155,21 +107,21 @@ env = Environment(
     autoescape=select_autoescape(["html", "xml"])
 )
 
-# 📁 Directorios generados
+# DIR Directorios generados
 generated_pdf_dir = BASE_DIR / "generated" / "pdf"
 generated_qr_dir = BASE_DIR / "generated" / "qr"
 
 generated_pdf_dir.mkdir(parents=True, exist_ok=True)
 generated_qr_dir.mkdir(parents=True, exist_ok=True)
 
-# 📁 Static
+# DIR Static
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app" / "static")), name="static")
 
-# 📁 Archivos generados
+# DIR Archivos generados
 app.mount("/generated", StaticFiles(directory=str(BASE_DIR / "generated")), name="generated")
 
 
-# 🔹 GET - Mostrar formulario
+# - GET - Mostrar formulario
 @app.get("/", response_class=HTMLResponse)
 def show_form(request: Request):
     try:
@@ -186,7 +138,7 @@ def show_form(request: Request):
         return HTMLResponse("<h1>Error cargando el formulario</h1>")
 
 
-# 🔹 POST - Generar certificado (formulario HTML original)
+# - POST - Generar certificado (formulario HTML original)
 @app.post("/generate", response_class=HTMLResponse)
 def generate_certificate(
     request: Request,
@@ -196,11 +148,14 @@ def generate_certificate(
     issue_date: str = Form(...),
     description_text: str = Form(...),
     registry_number: str = Form(...),
-    course_name: str = Form(...),  # ✅ Nuevo campo
+    course_name: str = Form(...),  # OK Nuevo campo
 ):
     try:
-        # ✅ URL corregida con carpeta por curso
-        public_url = f"https://stenergyedu.com/CERTIFICADOS_2026/{course_name}/{registry_number}.pdf"
+        # OK URL corregida con carpeta por curso
+        # OK URL generada para Supabase
+        supabase_url = os.getenv("SUPABASE_URL", "https://tu-proyecto.supabase.co")
+        safe_course_name = "".join(c for c in course_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        public_url = f"{supabase_url}/storage/v1/object/public/certificados/{safe_course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
@@ -208,10 +163,10 @@ def generate_certificate(
         front_template_path = BASE_DIR / "app" / "static" / "front.png"
         back_template_path = BASE_DIR / "app" / "static" / "back.png"
 
-        # 🔹 Generar QR
+        # - Generar QR
         generate_qr(public_url, str(qr_path))
 
-        # 🔹 Generar PDF
+        # - Generar PDF
         generate_certificate_pdf(
             output_pdf=str(pdf_path),
             front_template_path=str(front_template_path),
@@ -250,7 +205,7 @@ def generate_certificate(
         return HTMLResponse(content=html_content)
 
 
-# ✅ API JSON - Endpoint para React
+# OK API JSON - Endpoint para React
 @app.post("/api/generate")
 async def api_generate_certificate(request: Request):
     """
@@ -275,7 +230,9 @@ async def api_generate_certificate(request: Request):
                 content={"success": False, "error": "Faltan campos obligatorios"}
             )
 
-        public_url = f"https://stenergyedu.com/CERTIFICADOS_2026/{course_name}/{registry_number}.pdf"
+        supabase_url = os.getenv("SUPABASE_URL", "https://tu-proyecto.supabase.co")
+        safe_course_name = "".join(c for c in course_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        public_url = f"{supabase_url}/storage/v1/object/public/certificados/{safe_course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
@@ -283,10 +240,10 @@ async def api_generate_certificate(request: Request):
         front_template_path = BASE_DIR / "app" / "static" / "front.png"
         back_template_path = BASE_DIR / "app" / "static" / "back.png"
 
-        # 🔹 Generar QR
+        # - Generar QR
         generate_qr(public_url, str(qr_path))
 
-        # 🔹 Generar PDF
+        # - Generar PDF
         generate_certificate_pdf(
             output_pdf=str(pdf_path),
             front_template_path=str(front_template_path),
@@ -300,9 +257,9 @@ async def api_generate_certificate(request: Request):
             registry_number=registry_number,
         )
 
-        # 📤 Subir al cPanel en segundo plano (no bloquea la respuesta)
+        # RUN 3. Subir a Supabase en segundo plano
         threading.Thread(
-            target=upload_pdf_to_cpanel,
+            target=upload_pdf_to_supabase,
             args=(str(pdf_path), course_name, f"{registry_number}.pdf")
         ).start()
 
@@ -321,7 +278,7 @@ async def api_generate_certificate(request: Request):
         )
 
 
-# ✅ Descarga directa del PDF generado
+# OK Descarga directa del PDF generado
 @app.get("/api/download/{registry_number}")
 def download_certificate(registry_number: str):
     """Permite descargar el PDF generado directamente."""
@@ -459,7 +416,7 @@ def get_wp_token():
     wp_pass = os.getenv("WP_MASTER_PASS")
     
     if not wp_user or not wp_pass:
-        print("⚠️ WP_MASTER_USER o WP_MASTER_PASS no están configurados en Render.")
+        print("WARN WP_MASTER_USER o WP_MASTER_PASS no están configurados en Render.")
         return None
         
     try:

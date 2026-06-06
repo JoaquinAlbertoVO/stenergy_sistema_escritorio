@@ -9,7 +9,7 @@ const API_URL = process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000';
 // ============================================
 // Helper para peticiones HTTP
 // ============================================
-async function apiFetch(endpoint, options = {}) {
+export async function apiFetch(endpoint, options = {}) {
   const url = `${API_URL}${endpoint}`;
   const config = {
     headers: { 'Content-Type': 'application/json', ...options.headers },
