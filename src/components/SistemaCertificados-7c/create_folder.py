@@ -10,7 +10,7 @@ port = int(os.getenv("SFTP_PORT", "22"))
 user = os.getenv("SFTP_USER")
 password = os.getenv("SFTP_PASS")
 # Ruta relativa desde el home del usuario
-remote_dir = os.getenv("REMOTE_DIR", "public_html/stenergy-certificados")
+remote_dir = os.getenv("REMOTE_DIR", "public_html/CERTIFICADOS_2026")
 
 print(f"Conectando a {host}:{port} con usuario '{user}'...")
 
@@ -34,7 +34,7 @@ try:
             print(f"   [CREADA] {part}")
 
     print(f"\n[LISTO] Carpeta creada exitosamente!")
-    print(f"   URL publica: https://stenergyedu.com/stenergy-certificados/")
+    print(f"   URL publica: https://stenergyedu.com/CERTIFICADOS_2026/")
 
     sftp.close()
     transport.close()

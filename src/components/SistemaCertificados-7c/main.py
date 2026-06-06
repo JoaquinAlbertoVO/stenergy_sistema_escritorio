@@ -76,7 +76,7 @@ def upload_pdf_to_cpanel(pdf_path: str, course_name: str, filename: str):
         print("⚠️ SFTP no configurado. El PDF solo se guardó localmente.", flush=True)
         return
 
-    BASE_FOLDER = "stenergy-certificados"
+    BASE_FOLDER = "CERTIFICADOS_2026"
 
     try:
         print("▶️ Conectando a SFTP...", flush=True)
