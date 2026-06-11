@@ -30,6 +30,7 @@ jobs:
           host: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           key: ${{ secrets.FTP_KEY }}
+          passphrase: ${{ secrets.FTP_KEY_PASSPHRASE }}
           port: 22
           source: "build/*"
           target: "stenergyedu.com/" # Opcional: si la ruta es /public_html/stenergyedu.com/ cambia esto
