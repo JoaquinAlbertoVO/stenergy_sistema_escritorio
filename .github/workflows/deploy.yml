@@ -35,5 +35,7 @@ jobs:
           echo "$FTP_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keygen -p -P "$FTP_KEY_PASSPHRASE" -N "" -f ~/.ssh/id_rsa
-          sudo apt-get update && sudo apt-get install -y lftp
-          lftp -d -c "set sftp:connect-program 'ssh -a -x -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no'; open -u $FTP_USERNAME, sftp://$FTP_SERVER; mirror -R --parallel=10 build/ public_html/sistema/"
+          mv build sistema
+          echo "cd public_html" > sftp_batch
+          echo "put -R sistema" >> sftp_batch
+          sftp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -b sftp_batch $FTP_USERNAME@$FTP_SERVER
