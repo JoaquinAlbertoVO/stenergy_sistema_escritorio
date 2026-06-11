@@ -24,16 +24,13 @@ jobs:
       - name: 🏗️ Construir el proyecto
         run: npm run build
 
-      - name: 🚀 Subir a cPanel por FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: 🚀 Subir a cPanel por SFTP
+        uses: appleboy/scp-action@v0.1.7
         with:
-          server: ${{ secrets.FTP_SERVER }}
+          host: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # Subimos únicamente la carpeta "build" donde está el código compilado
-          local-dir: ./build/ 
-          
-          # IMPORTANTE: Cambia esta ruta a la carpeta exacta donde está alojado stenergyedu.com en tu cPanel.
-          # - Si es tu dominio principal, normalmente es: /public_html/
-          # - Si es un dominio adicional, suele ser: /stenergyedu.com/ o /public_html/stenergyedu.com/
-          server-dir: /stenergyedu.com/
+          port: 22
+          source: "build/*"
+          target: "stenergyedu.com/" # Opcional: si la ruta es /public_html/stenergyedu.com/ cambia esto
+          strip_components: 1
