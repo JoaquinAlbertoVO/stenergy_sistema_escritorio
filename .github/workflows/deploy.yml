@@ -1,0 +1,39 @@
+name: Deploy React App to cPanel
+
+on:
+  push:
+    branches:
+      - main  # Se ejecutará cada vez que subas cambios a la rama main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Obtener el código
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Puedes cambiar a la versión exacta que uses
+
+      - name: 📦 Instalar dependencias
+        run: npm ci
+
+      - name: 🏗️ Construir el proyecto
+        run: npm run build
+
+      - name: 🚀 Subir a cPanel por FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # Subimos únicamente la carpeta "build" donde está el código compilado
+          local-dir: ./build/ 
+          
+          # IMPORTANTE: Cambia esta ruta a la carpeta exacta donde está alojado stenergyedu.com en tu cPanel.
+          # - Si es tu dominio principal, normalmente es: /public_html/
+          # - Si es un dominio adicional, suele ser: /stenergyedu.com/ o /public_html/stenergyedu.com/
+          server-dir: /stenergyedu.com/
