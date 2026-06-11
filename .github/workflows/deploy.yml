@@ -33,5 +33,5 @@ jobs:
           passphrase: ${{ secrets.FTP_KEY_PASSPHRASE }}
           port: 22
           source: "build/*"
-          target: "/home/stenergyedu/public_html/sistema/"
+          target: "public_html/sistema/"
           strip_components: 1
