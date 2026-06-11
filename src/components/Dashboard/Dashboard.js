@@ -179,7 +179,7 @@ function Dashboard() {
       <div className="dashboard-welcome">
         <div className="welcome-text">
           <h2>
-            ¡Hola, <span className="welcome-name">{user?.name}</span>! 👋🚀
+            Ala pe CAUSAYIN <span className="welcome-name">{user?.name}</span>
           </h2>
           <p>Aquí tienes el resumen de {isAdmin() ? 'todo el sistema' : 'tus ventas'}</p>
         </div>
