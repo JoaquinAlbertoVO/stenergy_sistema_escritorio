@@ -25,13 +25,14 @@ jobs:
         run: npm run build
 
       - name: 🚀 Subir a cPanel por SFTP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          key: ${{ secrets.FTP_KEY }}
-          passphrase: ${{ secrets.FTP_KEY_PASSPHRASE }}
-          port: 22
-          source: "build/*"
-          target: "public_html/sistema/"
-          strip_components: 1
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_KEY: ${{ secrets.FTP_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$FTP_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $FTP_SERVER >> ~/.ssh/known_hosts
+          sudo apt-get install -y lftp
+          lftp -c "open -u $FTP_USERNAME, sftp://$FTP_SERVER; set sftp:connect-program 'ssh -a -x -i ~/.ssh/id_rsa'; mirror -R --parallel=10 build/ public_html/sistema/"
