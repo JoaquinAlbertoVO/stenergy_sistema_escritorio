@@ -1,5 +1,5 @@
 import api from './api';
-import { apiFetch } from '../utils/storage';
+
 
 // Obtener todos los cursos (Público)
 export const getCourses = async () => {
