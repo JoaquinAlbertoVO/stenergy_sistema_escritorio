@@ -164,36 +164,7 @@ function CertificateEditModal({ sale, onClose, onSave }) {
                   <textarea rows="3" name="descriptionText" value={formData.descriptionText} onChange={handleChange} required />
                 </div>
 
-                <div className="form-group form-group-full">
-                  <label>Carpeta del Curso en cPanel (Ruta del PDF)</label>
-                  <input 
-                    type="text" 
-                    name="cpanelFolder" 
-                    value={formData.cpanelFolder} 
-                    onChange={handleChange} 
-                    list="cpanel-folders"
-                    placeholder="Ej: MANTENIMIENTO_DE_SUBESTACIONES"
-                    required 
-                  />
-                  <datalist id="cpanel-folders">
-                    <option value="ANALISIS_DE_FACTURACIÓN" />
-                    <option value="ANALIZADOR_DE_REDES" />
-                    <option value="BANCO_DE_CONDENSADORES" />
-                    <option value="CANALIZACION_TUBERIA_CONDUIT" />
-                    <option value="DETECTOR_DE_CABLES" />
-                    <option value="EMPALME_AUTOCONTRAIBLE" />
-                    <option value="EMPALME_TERMOCONTRAIBLE" />
-                    <option value="EMPALMES_TERMINACIONES_3M" />
-                    <option value="EXPENDIENTE_MT" />
-                    <option value="MANTENIMIENTO_DE_SUBESTACIONES" />
-                    <option value="PROTECCIONES_SISTEMAS" />
-                    <option value="TERMINACION_AUTOCONTRAIBLE" />
-                    <option value="TERMINACIONES_TERMOCONTRAIBLES" />
-                  </datalist>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Debe coincidir EXACTAMENTE con el nombre de la carpeta en el cPanel para que el enlace funcione.
-                  </span>
-                </div>
+
               </div>
             </form>
           </div>

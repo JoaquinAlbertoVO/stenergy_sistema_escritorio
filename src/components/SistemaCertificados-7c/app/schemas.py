@@ -27,6 +27,7 @@ class CourseBase(BaseModel):
     icon: str
     academicHours: str
     descriptionText: str
+    cpanelFolder: Optional[str] = ""
 
 class CourseCreate(CourseBase):
     id: str

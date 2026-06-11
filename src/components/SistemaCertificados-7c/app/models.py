@@ -23,6 +23,7 @@ class Course(Base):
     icon = Column(String)
     academicHours = Column(String)
     descriptionText = Column(Text)
+    cpanelFolder = Column(String, nullable=True)
 
 class CalendarEntry(Base):
     __tablename__ = "calendar"
