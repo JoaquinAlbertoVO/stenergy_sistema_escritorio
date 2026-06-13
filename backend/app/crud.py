@@ -71,7 +71,7 @@ def delete_calendar_entry(db: Session, entry_id: str):
 
 # ---- Sales ----
 def get_sales(db: Session):
-    return db.query(models.Sale).all()
+    return db.query(models.Sale).order_by(models.Sale.date.desc()).all()
 
 def create_sale(db: Session, sale: schemas.SaleCreate):
     # Separa los payments
