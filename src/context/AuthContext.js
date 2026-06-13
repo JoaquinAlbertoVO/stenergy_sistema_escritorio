@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, invalidateCache, preloadData } from '../utils/storage';
+import { loginUser as loginWP, logoutUser as logoutWP } from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -24,7 +25,14 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     try {
-      // Intentar autenticar con el backend
+      // 1. Intentar autenticar con WordPress para renovar el token JWT
+      try {
+        await loginWP(username, password);
+      } catch (e) {
+        console.warn("No se pudo iniciar sesión en WordPress (puede fallar si las credenciales son distintas)", e);
+      }
+
+      // 2. Autenticar con el backend de FastAPI
       const response = await fetch(`${process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000'}/api/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,6 +70,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     clearCurrentUser();
+    logoutWP();
   };
 
   const isAdmin = () => user?.role === 'admin';
