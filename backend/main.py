@@ -64,6 +64,10 @@ app.add_middleware(
 )
 
 
+def get_safe_course_name(course_name: str) -> str:
+    normalized = unicodedata.normalize('NFKD', course_name).encode('ascii', 'ignore').decode('ascii')
+    return re.sub(r'[^a-zA-Z0-9]+', '-', normalized).strip('-').lower()
+
 # 📤 Función para subir PDFs a Supabase Storage
 def upload_pdf_to_supabase(pdf_path: str, course_name: str, filename: str):
     """Sube el PDF generado a Supabase Storage para que sea accesible públicamente."""
@@ -80,7 +84,7 @@ def upload_pdf_to_supabase(pdf_path: str, course_name: str, filename: str):
         supabase: Client = create_client(supabase_url, supabase_key)
         
         # Sanitizar el nombre del curso
-        safe_course_name = "".join(c for c in course_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        safe_course_name = get_safe_course_name(course_name)
         storage_path = f"{safe_course_name}/{filename}"
         
         print(f"> Subiendo PDF '{filename}' al bucket 'certificados'...", flush=True)
@@ -155,7 +159,9 @@ def generate_certificate(
         # OK URL corregida con carpeta por curso
         # OK URL generada para Supabase
         supabase_url = os.getenv("SUPABASE_URL", "https://tu-proyecto.supabase.co")
-        safe_course_name = "".join(c for c in course_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        
+        safe_course_name = get_safe_course_name(course_name)
+        
         public_url = f"{supabase_url}/storage/v1/object/public/certificados/{safe_course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
@@ -232,8 +238,8 @@ async def api_generate_certificate(request: Request):
             )
 
         supabase_url = os.getenv("SUPABASE_URL", "https://tu-proyecto.supabase.co")
-        safe_course_name = "".join(c for c in course_name if c.isalnum() or c in (' ', '-', '_')).strip()
-        public_url = f"{supabase_url}/storage/v1/object/public/certificados/{safe_course_name}/{registry_number}.pdf"
+        safe_course_name = get_safe_course_name(req.courseName)
+        public_url = f"{supabase_url}/storage/v1/object/public/certificados/{safe_course_name}/{req.registryNumber}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
