@@ -84,7 +84,7 @@ function SalesPanel() {
         </SpotlightCard>
         <SpotlightCard className="metric-card" spotlightColor="rgba(0, 229, 255, 0.15)">
           <h3>Ingresos Totales</h3>
-          <p className="metric-value">S/ <CountUp from={0} to={filteredSales.reduce((sum, s) => sum + s.totalAmount, 0)} duration={1.5} separator="," /></p>
+          <p className="metric-value">S/ <CountUp from={0} to={filteredSales.reduce((sum, s) => sum + (s.paidAmount || 0), 0)} duration={1.5} separator="," /></p>
         </SpotlightCard>
         <SpotlightCard className="metric-card" spotlightColor="rgba(255, 71, 87, 0.15)">
           <h3>Deuda Pendiente</h3>
