@@ -16,6 +16,8 @@ import CertificatesPanel from './components/Certificates/CertificatesPanel';
 
 import './App.css';
 
+import Particles from './components/ui/Particles/Particles';
+
 const PrivateRoute = ({ children, roles }) => {
   const { user } = useAuth();
   
@@ -33,13 +35,27 @@ const PrivateRoute = ({ children, roles }) => {
 const AppLayout = ({ children }) => {
   return (
     <div className="app-container">
-      <Sidebar />
-      <main className="main-content">
-        <Header />
-        <div className="page-content">
-          {children}
-        </div>
-      </main>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+        <Particles 
+          particleColors={['#ffffff', '#ffba0d', '#00E5FF']}
+          particleCount={250}
+          particleSpread={10}
+          speed={0.1}
+          particleBaseSize={100}
+          moveParticlesOnHover={true}
+          alphaParticles={true}
+          disableRotation={false}
+        />
+      </div>
+      <div style={{ display: 'flex', width: '100%', height: '100%', position: 'relative', zIndex: 1 }}>
+        <Sidebar />
+        <main className="main-content">
+          <Header />
+          <div className="page-content">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

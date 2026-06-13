@@ -6,6 +6,7 @@ import PaymentHistoryModal from './PaymentHistoryModal';
 import CountUp from '../ui/CountUp/CountUp';
 import ElectricBorder from '../ui/ElectricBorder/ElectricBorder';
 import GlareHover from '../ui/GlareHover/GlareHover';
+import SpotlightCard from '../ui/SpotlightCard/SpotlightCard';
 import './Sales.css';
 
 function SalesPanel() {
@@ -77,6 +78,25 @@ function SalesPanel() {
 
   return (
     <div className="sales-panel">
+      <div className="dashboard-metrics-grid">
+        <SpotlightCard className="metric-card" spotlightColor="rgba(255, 186, 13, 0.15)">
+          <h3>Ventas Encontradas</h3>
+          <p className="metric-value"><CountUp from={0} to={filteredSales.length} duration={1} /></p>
+        </SpotlightCard>
+        <SpotlightCard className="metric-card" spotlightColor="rgba(0, 229, 255, 0.15)">
+          <h3>Ingresos Totales</h3>
+          <p className="metric-value">S/ <CountUp from={0} to={filteredSales.reduce((sum, s) => sum + s.totalAmount, 0)} duration={1.5} separator="," /></p>
+        </SpotlightCard>
+        <SpotlightCard className="metric-card" spotlightColor="rgba(255, 71, 87, 0.15)">
+          <h3>Deuda Pendiente</h3>
+          <p className="metric-value">S/ <CountUp from={0} to={filteredSales.reduce((sum, s) => {
+            const amount = s.totalAmount || 0;
+            const paid = s.paidAmount || 0;
+            return sum + Math.max(0, amount - paid);
+          }, 0)} duration={1.5} separator="," /></p>
+        </SpotlightCard>
+      </div>
+
       <div className="panel-toolbar">
         <div className="toolbar-left">
           <div className="search-wrapper">
@@ -254,13 +274,6 @@ function SalesPanel() {
           </div>
         )}
       </div>
-
-      <GlareHover className="sales-summary-glare" width="100%" height="auto" borderRadius="12px">
-        <div className="sales-summary" style={{ width: '100%' }}>
-          <span><CountUp from={0} to={filteredSales.length} duration={1} /> ventas encontradas</span>
-          <span>Total: <strong>S/ <CountUp from={0} to={filteredSales.reduce((sum, s) => sum + s.totalAmount, 0)} duration={1.5} separator="," /></strong></span>
-        </div>
-      </GlareHover>
 
       {showForm && (
         <SalesForm 

@@ -1,19 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-sidebar: rgba(18, 18, 25, 0.95);
+  --bg-primary: #030014;
+  --bg-sidebar: rgba(10, 10, 20, 0.4);
   --bg-card: rgba(255, 255, 255, 0.03);
   --border-color: rgba(255, 255, 255, 0.08);
   
   --color-primary: #ffba0d;
   --color-secondary: #ff6b35;
-  --color-success: #00d4aa;
+  --color-success: #00E5FF; /* Cyber Teal */
   --color-danger: #ff4757;
   
   --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.8);
-  --text-muted: rgba(255, 255, 255, 0.5);
+  --text-secondary: rgba(255, 255, 255, 0.75);
+  --text-muted: rgba(255, 255, 255, 0.45);
 }
 
 * {
@@ -23,13 +23,13 @@
 }
 
 select option {
-  background-color: var(--bg-primary);
+  background-color: #030014;
   color: var(--text-primary);
 }
 
 body {
   margin: 0;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
