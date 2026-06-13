@@ -5,7 +5,6 @@ import SalesForm from './SalesForm';
 import PaymentHistoryModal from './PaymentHistoryModal';
 import CountUp from '../ui/CountUp/CountUp';
 import ElectricBorder from '../ui/ElectricBorder/ElectricBorder';
-import GlareHover from '../ui/GlareHover/GlareHover';
 import SpotlightCard from '../ui/SpotlightCard/SpotlightCard';
 import './Sales.css';
 
