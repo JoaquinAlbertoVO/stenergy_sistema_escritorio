@@ -8,6 +8,25 @@ import ElectricBorder from '../ui/ElectricBorder/ElectricBorder';
 import SpotlightCard from '../ui/SpotlightCard/SpotlightCard';
 import './Sales.css';
 
+const getCountryFlag = (phone) => {
+  if (!phone) return '🇵🇪'; // Default a Perú
+  const p = phone.replace(/\D/g, ''); // Solo números
+  if (p.startsWith('593')) return '🇪🇨'; // Ecuador
+  if (p.startsWith('57')) return '🇨🇴'; // Colombia
+  if (p.startsWith('56')) return '🇨🇱'; // Chile
+  if (p.startsWith('52')) return '🇲🇽'; // Mexico
+  if (p.startsWith('591')) return '🇧🇴'; // Bolivia
+  if (p.startsWith('54')) return '🇦🇷'; // Argentina
+  if (p.startsWith('505')) return '🇳🇮'; // Nicaragua
+  if (p.startsWith('502')) return '🇬🇹'; // Guatemala
+  if (p.startsWith('503')) return '🇸🇻'; // El Salvador
+  if (p.startsWith('507')) return '🇵🇦'; // Panama
+  if (p.startsWith('34')) return '🇪🇸'; // España
+  if (p.startsWith('39')) return '🇮🇹'; // Italia
+  if (p.startsWith('1')) return '🇺🇸'; // USA
+  return '🇵🇪'; // Si no coincide, asumimos Perú (+51)
+};
+
 function SalesPanel() {
   const { user, isAdmin } = useAuth();
   const [sales, setSales] = useState([]);
@@ -79,20 +98,20 @@ function SalesPanel() {
     <div className="sales-panel">
       <div className="dashboard-metrics-grid">
         <SpotlightCard className="metric-card" spotlightColor="rgba(255, 186, 13, 0.15)">
-          <h3>Ventas Encontradas</h3>
+          <h3 style={{ color: '#ffba0d' }}>Ventas Encontradas</h3>
           <p className="metric-value"><CountUp from={0} to={filteredSales.length} duration={1} /></p>
         </SpotlightCard>
         <SpotlightCard className="metric-card" spotlightColor="rgba(0, 229, 255, 0.15)">
-          <h3>Ingresos Totales</h3>
-          <p className="metric-value">S/ <CountUp from={0} to={filteredSales.reduce((sum, s) => sum + (s.paidAmount || 0), 0)} duration={1.5} separator="," /></p>
+          <h3 style={{ color: '#00E5FF' }}>Ingresos Totales</h3>
+          <p className="metric-value">S/ <CountUp from={0} to={Math.round(filteredSales.reduce((sum, s) => sum + (s.paidAmount || 0), 0))} duration={1.5} separator="," /></p>
         </SpotlightCard>
         <SpotlightCard className="metric-card" spotlightColor="rgba(255, 71, 87, 0.15)">
-          <h3>Deuda Pendiente</h3>
-          <p className="metric-value">S/ <CountUp from={0} to={filteredSales.reduce((sum, s) => {
+          <h3 style={{ color: '#ff4757' }}>Deuda Pendiente</h3>
+          <p className="metric-value">S/ <CountUp from={0} to={Math.round(filteredSales.reduce((sum, s) => {
             const amount = s.totalAmount || 0;
             const paid = s.paidAmount || 0;
             return sum + Math.max(0, amount - paid);
-          }, 0)} duration={1.5} separator="," /></p>
+          }, 0))} duration={1.5} separator="," /></p>
         </SpotlightCard>
       </div>
 
@@ -208,7 +227,7 @@ function SalesPanel() {
                 </td>
                 <td>
                   <div className="td-client">
-                    <span className="client-name">{sale.clientName}</span>
+                    <span className="client-name">{getCountryFlag(sale.clientPhone)} {sale.clientName}</span>
                     <span className="client-email">{sale.clientEmail}</span>
                   </div>
                 </td>
