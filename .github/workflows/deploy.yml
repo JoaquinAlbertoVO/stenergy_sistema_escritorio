@@ -37,8 +37,5 @@ jobs:
           # Remover la passphrase de la llave SSH
           ssh-keygen -p -P "$FTP_KEY_PASSPHRASE" -N "" -f ~/.ssh/id_rsa
           
-          # Instalar lftp para una sincronizacin exacta y sin carpetas anidadas
-          sudo apt-get update && sudo apt-get install -y lftp
-          
-          # Usar lftp para hacer un mirror (espejo) de la carpeta build hacia public_html/sistema
-          lftp -c "set sftp:auto-confirm yes; set sftp:connect-program 'ssh -a -x -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no'; connect sftp://$FTP_USERNAME@$FTP_SERVER; mirror -R -v --parallel=5 build/ public_html/sistema/;"
+          # Usar scp para copiar los archivos compilados directamente a public_html/sistema
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r build/* $FTP_USERNAME@$FTP_SERVER:public_html/sistema/
