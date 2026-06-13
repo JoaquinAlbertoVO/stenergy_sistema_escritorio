@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './Login.css';
+import Aurora from '../ui/Aurora/Aurora';
+import BlurText from '../ui/BlurText/BlurText';
 
 function Login() {
   const { login } = useAuth();
@@ -26,14 +28,11 @@ function Login() {
 
   return (
     <div className="login-page">
-      <div className="login-bg-effects">
-        <div className="login-orb login-orb-1"></div>
-        <div className="login-orb login-orb-2"></div>
-        <div className="login-orb login-orb-3"></div>
-        <div className="login-grid-bg"></div>
+      <div className="login-bg-effects" style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
+        <Aurora colorStops={['#121212', '#332303', '#111111']} blend={0.8} amplitude={1.0} />
       </div>
 
-      <div className="login-container">
+      <div className="login-container" style={{ position: 'relative', zIndex: 1 }}>
         <div className="login-card">
           <div className="login-header">
             <div className="login-logo">
@@ -44,8 +43,8 @@ function Login() {
                   <path d="M15 18L19 22L26 15" stroke="#ffba0d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <h1 className="login-title">ST Energy</h1>
-              <p className="login-subtitle">Sistema de Gestión de Ventas</p>
+              <BlurText text="ST Energy" className="login-title" delay={60} animateBy="letters" direction="bottom" />
+              <BlurText text="Sistema de Gestión de Ventas" className="login-subtitle" delay={40} animateBy="words" direction="top" />
             </div>
           </div>
 

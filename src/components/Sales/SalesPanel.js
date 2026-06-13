@@ -3,6 +3,9 @@ import { useAuth } from '../../context/AuthContext';
 import { getSales, getCourses } from '../../utils/storage';
 import SalesForm from './SalesForm';
 import PaymentHistoryModal from './PaymentHistoryModal';
+import CountUp from '../ui/CountUp/CountUp';
+import ElectricBorder from '../ui/ElectricBorder/ElectricBorder';
+import GlareHover from '../ui/GlareHover/GlareHover';
 import './Sales.css';
 
 function SalesPanel() {
@@ -150,13 +153,15 @@ function SalesPanel() {
             </select>
           </div>
 
-          <button className="btn-primary" onClick={() => { setEditingSale(null); setShowForm(true); }} style={{ whiteSpace: 'nowrap' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Nueva Venta
-        </button>
+          <ElectricBorder borderRadius={8} color="#ffba0d" speed={2} className="nueva-venta-border">
+            <button className="btn-primary" onClick={() => { setEditingSale(null); setShowForm(true); }} style={{ whiteSpace: 'nowrap' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Nueva Venta
+            </button>
+          </ElectricBorder>
       </div>
 
       <div className="sales-table-wrapper">
@@ -250,10 +255,12 @@ function SalesPanel() {
         )}
       </div>
 
-      <div className="sales-summary">
-        <span>{filteredSales.length} ventas encontradas</span>
-        <span>Total: <strong>S/ {filteredSales.reduce((sum, s) => sum + s.totalAmount, 0).toLocaleString()}</strong></span>
-      </div>
+      <GlareHover className="sales-summary-glare" width="100%" height="auto" borderRadius="12px">
+        <div className="sales-summary" style={{ width: '100%' }}>
+          <span><CountUp from={0} to={filteredSales.length} duration={1} /> ventas encontradas</span>
+          <span>Total: <strong>S/ <CountUp from={0} to={filteredSales.reduce((sum, s) => sum + s.totalAmount, 0)} duration={1.5} separator="," /></strong></span>
+        </div>
+      </GlareHover>
 
       {showForm && (
         <SalesForm 
