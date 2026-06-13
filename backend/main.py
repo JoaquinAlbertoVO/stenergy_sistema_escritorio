@@ -320,7 +320,7 @@ def wp_enroll(data: dict):
         token = token_data["token"]
         
         # 2. Call Enroll API
-        enroll_resp = requests.post("https://stenergyedu.com/wp-json/stenergy/v1/enroll", json={
+        enroll_resp = requests.post("https://stenergyedu.com/wp-json/stenergy/v1/enroll", data={
             "email": data.get("email"),
             "name": data.get("name"),
             "course_id": data.get("course_id"),
