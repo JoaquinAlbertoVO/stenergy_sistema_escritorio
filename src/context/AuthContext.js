@@ -25,13 +25,6 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     try {
-      // 1. Intentar autenticar con WordPress para renovar el token JWT
-      try {
-        await loginWP(username, password);
-      } catch (e) {
-        console.warn("No se pudo iniciar sesión en WordPress (puede fallar si las credenciales son distintas)", e);
-      }
-
       // 2. Autenticar con el backend de FastAPI
       const response = await fetch(`${process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000'}/api/auth`, {
         method: 'POST',

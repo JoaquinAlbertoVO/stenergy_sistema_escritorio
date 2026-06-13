@@ -39,21 +39,31 @@ export const getCourseById = async (courseId) => {
 // Inscribir a un usuario en un curso (Llamada directa a WordPress)
 export const enrollStudent = async (email, name, courseId, dni) => {
   try {
-    const response = await api.post('/wp-json/stenergy/v1/enroll', {
-      email,
-      name,
-      course_id: courseId,
-      dni
+    const API_URL = process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000';
+    // Hacer la petición a nuestro propio backend (FastAPI) para que él hable con WordPress de forma segura
+    const response = await fetch(`${API_URL}/api/wp/enroll`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        name,
+        course_id: courseId,
+        dni
+      })
     });
     
-    if (response.data?.error || response.data?.message === 'Lo siento, no tienes permisos para hacer eso.') {
-       return { success: false, error: response.data.error || response.data.message };
+    const data = await response.json();
+    
+    if (data?.error || data?.message === 'Lo siento, no tienes permisos para hacer eso.') {
+       return { success: false, error: data.error || data.message };
     }
     
-    return { success: true, data: response.data };
+    return { success: true, data: data };
   } catch (error) {
     console.error(`Error inscribiendo al estudiante ${email}:`, error);
-    return { success: false, error: error.response?.data?.message || error.message || 'Error en la inscripción a TutorLMS' };
+    return { success: false, error: error.message || 'Error en la inscripción a TutorLMS' };
   }
 };
 

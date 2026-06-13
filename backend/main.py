@@ -1,6 +1,7 @@
 from pathlib import Path
 import traceback
 import os
+import requests
 
 import threading
 
@@ -299,6 +300,37 @@ def download_certificate(registry_number: str):
 # ==========================================
 # REST API PARA REACT (BASE DE DATOS REAL)
 # ==========================================
+
+# ---- WordPress Integration ----
+@app.post("/api/wp/enroll")
+def wp_enroll(data: dict):
+    WP_USER = os.getenv("WP_USER", "admin_ielectric")
+    WP_PASS = os.getenv("WP_PASS", "RBwSU2sfkAtqBb3x")
+    
+    try:
+        # 1. Get WP Token
+        token_resp = requests.post("https://stenergyedu.com/wp-json/jwt-auth/v1/token", json={
+            "username": WP_USER,
+            "password": WP_PASS
+        })
+        token_data = token_resp.json()
+        if "token" not in token_data:
+            return JSONResponse(status_code=400, content={"success": False, "error": "No se pudo obtener el token de WordPress"})
+            
+        token = token_data["token"]
+        
+        # 2. Call Enroll API
+        enroll_resp = requests.post("https://stenergyedu.com/wp-json/stenergy/v1/enroll", json={
+            "email": data.get("email"),
+            "name": data.get("name"),
+            "course_id": data.get("course_id"),
+            "dni": data.get("dni")
+        }, headers={"Authorization": f"Bearer {token}"})
+        
+        return enroll_resp.json()
+    except Exception as e:
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 # ---- Migrate Data Endpoint ----
 @app.post("/api/migrate")
