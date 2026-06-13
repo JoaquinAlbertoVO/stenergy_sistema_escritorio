@@ -135,7 +135,8 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  overflow-x: auto;
+  overflow: auto;
+  max-height: calc(100vh - 220px);
 }
 
 .sales-table {
@@ -145,7 +146,7 @@
 }
 
 .sales-table thead {
-  background: rgba(255,255,255,0.03);
+  background: transparent;
 }
 
 .sales-table th {
@@ -157,6 +158,11 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #111; /* Solid background to hide scrolling rows underneath */
+  box-shadow: 0 1px 0 var(--border-color);
 }
 
 .sales-table tbody tr {
