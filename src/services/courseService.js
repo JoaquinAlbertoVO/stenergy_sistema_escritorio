@@ -56,8 +56,9 @@ export const enrollStudent = async (email, name, courseId, dni) => {
     
     const data = await response.json();
     
-    if (data?.error || data?.message === 'Lo siento, no tienes permisos para hacer eso.') {
-       return { success: false, error: data.error || data.message };
+    // WordPress REST API errors usually have 'code' and 'message' (e.g. code: "missing_data" or "existing_user_email")
+    if (data?.error || data?.code === 'missing_data' || data?.code === 'rest_forbidden' || (data?.code && data?.data?.status >= 400)) {
+       return { success: false, error: data.error || data.message || 'Error desconocido de WordPress' };
     }
     
     return { success: true, data: data };

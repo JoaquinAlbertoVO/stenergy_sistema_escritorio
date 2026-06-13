@@ -330,10 +330,25 @@ def wp_enroll(data: dict):
         # Parse response resiliently (ignore PHP warnings before JSON)
         text = enroll_resp.text
         start_idx = text.find('{')
+        
+        resp_data = {}
         if start_idx != -1:
             import json
-            return json.loads(text[start_idx:])
-        return enroll_resp.json()
+            try:
+                resp_data = json.loads(text[start_idx:])
+            except:
+                resp_data = {"error": "Invalid JSON parsing", "text": text}
+        else:
+            try:
+                resp_data = enroll_resp.json()
+            except:
+                resp_data = {"error": "Invalid response", "text": text}
+                
+        # If WordPress returned a 4xx/5xx error, propagate it
+        if enroll_resp.status_code >= 400:
+            return JSONResponse(status_code=enroll_resp.status_code, content=resp_data)
+            
+        return resp_data
     except Exception as e:
         print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
