@@ -238,8 +238,8 @@ async def api_generate_certificate(request: Request):
             )
 
         supabase_url = os.getenv("SUPABASE_URL", "https://tu-proyecto.supabase.co")
-        safe_course_name = get_safe_course_name(req.courseName)
-        public_url = f"{supabase_url}/storage/v1/object/public/certificados/{safe_course_name}/{req.registryNumber}.pdf"
+        safe_course_name = get_safe_course_name(course_name)
+        public_url = f"{supabase_url}/storage/v1/object/public/certificados/{safe_course_name}/{registry_number}.pdf"
 
         qr_path = generated_qr_dir / f"{registry_number}.png"
         pdf_path = generated_pdf_dir / f"{registry_number}.pdf"
