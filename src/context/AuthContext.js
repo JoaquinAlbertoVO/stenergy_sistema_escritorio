@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, invalidateCache, preloadData } from '../utils/storage';
-import { loginUser as loginWP, logoutUser as logoutWP } from '../services/authService';
+import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, preloadData } from '../utils/storage';
+import { logoutUser as logoutWP } from '../services/authService';
 
 const AuthContext = createContext(null);
 
