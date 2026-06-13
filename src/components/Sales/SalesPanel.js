@@ -36,7 +36,7 @@ function SalesPanel() {
     if (!isAdmin()) {
       allSales = allSales.filter(s => s.sellerId === user.id);
     }
-    setSales(allSales.reverse());
+    setSales([...allSales]);
   }, [user, isAdmin]);
 
   useEffect(() => {
