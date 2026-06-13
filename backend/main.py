@@ -320,13 +320,19 @@ def wp_enroll(data: dict):
         token = token_data["token"]
         
         # 2. Call Enroll API
-        enroll_resp = requests.post("https://stenergyedu.com/wp-json/stenergy/v1/enroll", data={
+        enroll_resp = requests.post("https://stenergyedu.com/wp-json/stenergy/v1/enroll", json={
             "email": data.get("email"),
             "name": data.get("name"),
             "course_id": data.get("course_id"),
             "dni": data.get("dni")
         }, headers={"Authorization": f"Bearer {token}"})
         
+        # Parse response resiliently (ignore PHP warnings before JSON)
+        text = enroll_resp.text
+        start_idx = text.find('{')
+        if start_idx != -1:
+            import json
+            return json.loads(text[start_idx:])
         return enroll_resp.json()
     except Exception as e:
         print(traceback.format_exc())
