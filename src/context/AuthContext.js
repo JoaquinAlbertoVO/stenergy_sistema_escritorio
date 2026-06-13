@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, needsMigration, migrateLocalStorageToBackend, invalidateCache, preloadData } from '../utils/storage';
+import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, invalidateCache, preloadData } from '../utils/storage';
 
 const AuthContext = createContext(null);
 
@@ -10,14 +10,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const loadApp = async () => {
       initializeData();
-
-      // Migrar datos de localStorage al backend si es necesario
-      if (needsMigration()) {
-        console.log('🔄 Migrando datos de localStorage al backend...');
-        const result = await migrateLocalStorageToBackend();
-        console.log('📦 Resultado de migración:', result.message);
-        await invalidateCache();
-      }
 
       const savedUser = getCurrentUser();
       if (savedUser) {

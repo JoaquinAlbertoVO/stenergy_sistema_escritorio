@@ -303,32 +303,8 @@ def download_certificate(registry_number: str):
 # ---- Migrate Data Endpoint ----
 @app.post("/api/migrate")
 def migrate_data(data: dict, db: Session = Depends(get_db)):
-    """ Endpoint temporal para migrar datos desde localStorage a SQLite """
-    try:
-        # Migrate Users
-        for user_data in data.get("users", []):
-            if not crud.get_user_by_username(db, user_data["username"]):
-                crud.create_user(db, schemas.UserCreate(**user_data))
-        
-        # Migrate Courses
-        db.query(models.Course).delete()
-        for course_data in data.get("courses", []):
-            crud.create_course(db, schemas.CourseCreate(**course_data))
-            
-        # Migrate Calendar
-        db.query(models.CalendarEntry).delete()
-        for cal_data in data.get("calendar", []):
-            crud.create_calendar_entry(db, schemas.CalendarEntryCreate(**cal_data))
-            
-        # Migrate Sales
-        db.query(models.Sale).delete()
-        for sale_data in data.get("sales", []):
-            crud.create_sale(db, schemas.SaleCreate(**sale_data))
-            
-        return {"success": True, "message": "Datos migrados exitosamente"}
-    except Exception as e:
-        print(traceback.format_exc())
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+    """ Endpoint temporal para migrar datos desde localStorage a SQLite (DESACTIVADO para proteger datos PostgreSQL) """
+    return {"success": True, "message": "Migración desactivada: los datos ya están en PostgreSQL"}
 
 # ---- Courses ----
 @app.get("/api/courses", response_model=list[schemas.Course])
