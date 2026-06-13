@@ -65,6 +65,8 @@ app.add_middleware(
 
 
 def get_safe_course_name(course_name: str) -> str:
+    import unicodedata
+    import re
     normalized = unicodedata.normalize('NFKD', course_name).encode('ascii', 'ignore').decode('ascii')
     return re.sub(r'[^a-zA-Z0-9]+', '-', normalized).strip('-').lower()
 
