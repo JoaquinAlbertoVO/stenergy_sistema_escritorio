@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getSales, getSalesStats } from '../../utils/storage';
+import { getSales, getCourses } from '../../utils/storage';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import './Dashboard.css';
 
@@ -10,51 +10,118 @@ function Dashboard() {
   const [recentSales, setRecentSales] = useState([]);
   const [animatedValues, setAnimatedValues] = useState({});
   const [allSalesData, setAllSalesData] = useState([]);
+  const [coursesList, setCoursesList] = useState([]);
+  
+  // Filters state
+  const [dateFilter, setDateFilter] = useState('all');
+  const [courseFilter, setCourseFilter] = useState('all');
+  const [sellerFilter, setSellerFilter] = useState('all');
+  const [filteredSales, setFilteredSales] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
-      const userId = isAdmin() ? null : user.id;
-      const salesStats = await getSalesStats(userId);
-      setStats(salesStats);
-
       const allSales = await getSales();
-      const filtered = isAdmin() ? allSales : allSales.filter(s => s.sellerId === user.id);
-      
-      setAllSalesData(filtered);
-      setRecentSales(filtered.slice(-5).reverse());
-
-      // Animate numbers
-      const targets = {
-        totalSales: salesStats.totalSales,
-        totalRevenue: salesStats.totalRevenue,
-        totalDebt: salesStats.totalDebt,
-        pendingCertificates: salesStats.pendingCertificates
-      };
-
-      const duration = 1200;
-      const startTime = Date.now();
-      
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-
-        const current = {};
-        Object.keys(targets).forEach(key => {
-          current[key] = Math.round(targets[key] * eased);
-        });
-        setAnimatedValues(current);
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        }
-      };
-
-      requestAnimationFrame(animate);
+      const courses = await getCourses();
+      setCoursesList(courses);
+      const userSales = isAdmin() ? allSales : allSales.filter(s => s.sellerId === user.id);
+      setAllSalesData(userSales);
     };
-
     loadData();
   }, [user, isAdmin]);
+
+  useEffect(() => {
+    if (allSalesData.length === 0) {
+      setStats({
+        totalSales: 0, totalRevenue: 0, totalDebt: 0, pendingCertificates: 0,
+        paidSales: 0, partialSales: 0, pendingSales: 0
+      });
+      setFilteredSales([]);
+      setRecentSales([]);
+      return;
+    }
+
+    let filtered = [...allSalesData];
+
+    // 1. Filter by Date
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      filtered = filtered.filter(s => {
+        const d = new Date(s.date);
+        if (dateFilter === 'thisMonth') {
+          return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        } else if (dateFilter === 'lastMonth') {
+          let prevMonth = currentMonth - 1;
+          let prevYear = currentYear;
+          if (prevMonth < 0) {
+            prevMonth = 11;
+            prevYear -= 1;
+          }
+          return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+        }
+        return true;
+      });
+    }
+
+    // 2. Filter by Course
+    if (courseFilter !== 'all') {
+      filtered = filtered.filter(s => s.courseId === courseFilter);
+    }
+
+    // 3. Filter by Seller
+    if (isAdmin() && sellerFilter !== 'all') {
+      filtered = filtered.filter(s => s.sellerId === sellerFilter || s.sellerName === sellerFilter);
+    }
+
+    setFilteredSales(filtered);
+    setRecentSales(filtered.slice(-5).reverse());
+
+    const tSales = filtered.length;
+    const tRevenue = filtered.reduce((sum, s) => sum + (s.paidAmount || 0), 0);
+    const tDebt = filtered.reduce((sum, s) => sum + Math.max(0, (s.totalAmount || 0) - (s.paidAmount || 0)), 0);
+    const pCertificates = filtered.filter(s => s.status === 'pagado' && !s.certificateGenerated).length;
+    
+    setStats({
+      totalSales: tSales,
+      totalRevenue: tRevenue,
+      totalDebt: tDebt,
+      pendingCertificates: pCertificates,
+      paidSales: filtered.filter(s => s.status === 'pagado').length,
+      partialSales: filtered.filter(s => s.status === 'parcial').length,
+      pendingSales: filtered.filter(s => s.status === 'pendiente').length
+    });
+
+    // Animate numbers
+    const targets = {
+      totalSales: tSales,
+      totalRevenue: tRevenue,
+      totalDebt: tDebt,
+      pendingCertificates: pCertificates
+    };
+
+    const duration = 1200;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      const current = {};
+      Object.keys(targets).forEach(key => {
+        current[key] = Math.round(targets[key] * eased);
+      });
+      setAnimatedValues(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [allSalesData, dateFilter, courseFilter, sellerFilter, isAdmin]);
 
   if (!stats) return null;
 
@@ -125,7 +192,8 @@ function Dashboard() {
     }
   };
 
-  const filteredSales = allSalesData;
+  // Get unique sellers for the filter dropdown
+  const uniqueSellers = Array.from(new Set(allSalesData.map(s => s.sellerName || s.sellerId))).filter(Boolean);
 
   // Sales by seller
   const sellerStats = {};
@@ -182,6 +250,44 @@ function Dashboard() {
             Ala pe CAUSAYIN <span className="welcome-name">{user?.name}</span>
           </h2>
           <p>Aquí tienes el resumen de {isAdmin() ? 'todo el sistema' : 'tus ventas'}</p>
+        </div>
+      </div>
+
+      <div className="dashboard-toolbar">
+        <div className="toolbar-filters">
+          <select 
+            className="filter-select" 
+            value={dateFilter} 
+            onChange={(e) => setDateFilter(e.target.value)}
+          >
+            <option value="all">Todos los Tiempos</option>
+            <option value="thisMonth">Este Mes</option>
+            <option value="lastMonth">Mes Pasado</option>
+          </select>
+
+          <select 
+            className="filter-select" 
+            value={courseFilter} 
+            onChange={(e) => setCourseFilter(e.target.value)}
+          >
+            <option value="all">Todos los Cursos</option>
+            {coursesList.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+
+          {isAdmin() && (
+            <select 
+              className="filter-select" 
+              value={sellerFilter} 
+              onChange={(e) => setSellerFilter(e.target.value)}
+            >
+              <option value="all">Todos los Asesores</option>
+              {uniqueSellers.map(seller => (
+                <option key={seller} value={seller}>{seller}</option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
