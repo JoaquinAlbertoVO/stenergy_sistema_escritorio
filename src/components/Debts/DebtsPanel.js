@@ -255,12 +255,16 @@ function DebtsPanel() {
                                       </td>
                                       <td style={{ padding: '0.4rem' }}>
                                         <select value={editDebtForm.account} onChange={e => setEditDebtForm({...editDebtForm, account: e.target.value})} style={{ padding: '4px 6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'inherit' }}>
-                                          <option value="BCP">BCP</option>
-                                          <option value="BBVA">BBVA</option>
-                                          <option value="Interbank">Interbank</option>
-                                          <option value="Yape">Yape</option>
-                                          <option value="Plin">Plin</option>
-                                          <option value="Efectivo">Efectivo</option>
+                                          <option value="PICHINCHA">PICHINCHA</option>
+                                          <option value="GUAYAQUIL">GUAYAQUIL</option>
+                                          <option value="YAPE MARIELA">YAPE MARIELA</option>
+                                          <option value="YAPE DAYSI">YAPE DAYSI</option>
+                                          <option value="INTERBANK SOLES">INTERBANK SOLES</option>
+                                          <option value="INTERBANK DOLARES">INTERBANK DOLARES</option>
+                                          <option value="PAYPAL">PAYPAL</option>
+                                          <option value="WESTERN">WESTERN</option>
+                                          <option value="NEQUI">NEQUI</option>
+                                          <option value="EFECTIVO">EFECTIVO</option>
                                         </select>
                                       </td>
                                       <td style={{ padding: '0.4rem', textAlign: 'right' }}>
@@ -357,12 +361,16 @@ function DebtsPanel() {
               <div className="form-group">
                 <label>Cuenta de Depósito</label>
                 <select value={paymentAccount} onChange={(e) => setPaymentAccount(e.target.value)}>
-                  <option value="BCP">BCP</option>
-                  <option value="BBVA">BBVA</option>
-                  <option value="Interbank">Interbank</option>
-                  <option value="Yape">Yape</option>
-                  <option value="Plin">Plin</option>
-                  <option value="Efectivo">Efectivo</option>
+                  <option value="PICHINCHA">PICHINCHA</option>
+                  <option value="GUAYAQUIL">GUAYAQUIL</option>
+                  <option value="YAPE MARIELA">YAPE MARIELA</option>
+                  <option value="YAPE DAYSI">YAPE DAYSI</option>
+                  <option value="INTERBANK SOLES">INTERBANK SOLES</option>
+                  <option value="INTERBANK DOLARES">INTERBANK DOLARES</option>
+                  <option value="PAYPAL">PAYPAL</option>
+                  <option value="WESTERN">WESTERN</option>
+                  <option value="NEQUI">NEQUI</option>
+                  <option value="EFECTIVO">EFECTIVO</option>
                 </select>
               </div>
               <div className="form-actions">

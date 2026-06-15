@@ -129,12 +129,16 @@ function PaymentHistoryModal({ sale, onClose, onSave }) {
                             onChange={e => setEditForm({ ...editForm, account: e.target.value })}
                             style={{ padding: '4px 6px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'inherit' }}
                           >
-                            <option value="BCP">BCP</option>
-                            <option value="BBVA">BBVA</option>
-                            <option value="Interbank">Interbank</option>
-                            <option value="Yape">Yape</option>
-                            <option value="Plin">Plin</option>
-                            <option value="Efectivo">Efectivo</option>
+                            <option value="PICHINCHA">PICHINCHA</option>
+                            <option value="GUAYAQUIL">GUAYAQUIL</option>
+                            <option value="YAPE MARIELA">YAPE MARIELA</option>
+                            <option value="YAPE DAYSI">YAPE DAYSI</option>
+                            <option value="INTERBANK SOLES">INTERBANK SOLES</option>
+                            <option value="INTERBANK DOLARES">INTERBANK DOLARES</option>
+                            <option value="PAYPAL">PAYPAL</option>
+                            <option value="WESTERN">WESTERN</option>
+                            <option value="NEQUI">NEQUI</option>
+                            <option value="EFECTIVO">EFECTIVO</option>
                           </select>
                         </td>
                         <td style={{ padding: '6px 4px' }}>
@@ -225,12 +229,16 @@ function PaymentHistoryModal({ sale, onClose, onSave }) {
                 <div className="form-group">
                   <label>Cuenta</label>
                   <select value={newPayment.account} onChange={e => setNewPayment({...newPayment, account: e.target.value})}>
-                    <option value="BCP">BCP</option>
-                    <option value="BBVA">BBVA</option>
-                    <option value="Interbank">Interbank</option>
-                    <option value="Yape">Yape</option>
-                    <option value="Plin">Plin</option>
-                    <option value="Efectivo">Efectivo</option>
+                      <option value="PICHINCHA">PICHINCHA</option>
+                      <option value="GUAYAQUIL">GUAYAQUIL</option>
+                      <option value="YAPE MARIELA">YAPE MARIELA</option>
+                      <option value="YAPE DAYSI">YAPE DAYSI</option>
+                      <option value="INTERBANK SOLES">INTERBANK SOLES</option>
+                      <option value="INTERBANK DOLARES">INTERBANK DOLARES</option>
+                      <option value="PAYPAL">PAYPAL</option>
+                      <option value="WESTERN">WESTERN</option>
+                      <option value="NEQUI">NEQUI</option>
+                      <option value="EFECTIVO">EFECTIVO</option>
                   </select>
                 </div>
               </div>

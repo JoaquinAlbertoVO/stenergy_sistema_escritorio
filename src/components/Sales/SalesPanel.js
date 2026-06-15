@@ -216,12 +216,16 @@ function SalesPanel() {
               onChange={(e) => setFilterAccount(e.target.value)}
             >
               <option value="all">Todas las cuentas</option>
-              <option value="BCP">BCP</option>
-              <option value="BBVA">BBVA</option>
-              <option value="Interbank">Interbank</option>
-              <option value="Yape">Yape</option>
-              <option value="Plin">Plin</option>
-              <option value="Efectivo">Efectivo</option>
+              <option value="PICHINCHA">PICHINCHA</option>
+              <option value="GUAYAQUIL">GUAYAQUIL</option>
+              <option value="YAPE MARIELA">YAPE MARIELA</option>
+              <option value="YAPE DAYSI">YAPE DAYSI</option>
+              <option value="INTERBANK SOLES">INTERBANK SOLES</option>
+              <option value="INTERBANK DOLARES">INTERBANK DOLARES</option>
+              <option value="PAYPAL">PAYPAL</option>
+              <option value="WESTERN">WESTERN</option>
+              <option value="NEQUI">NEQUI</option>
+              <option value="EFECTIVO">EFECTIVO</option>
             </select>
             </div>
   
@@ -284,7 +288,7 @@ function SalesPanel() {
                     background: `${coursesList.find(c => c.id === sale.courseId)?.color || '#666'}20`,
                     color: coursesList.find(c => c.id === sale.courseId)?.color || '#666'
                   }}>
-                    {sale.courseName}
+                    {coursesList.find(c => c.id === sale.courseId)?.shortName || sale.courseName}
                   </span>
                 </td>
                 <td>

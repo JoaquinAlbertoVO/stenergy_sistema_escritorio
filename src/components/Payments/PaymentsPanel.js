@@ -120,12 +120,16 @@ function PaymentsPanel() {
   }, [allPayments, searchTerm, filterAccount, filterCourse, filterModality, filterMonth]);
 
   const accountColors = {
-    'BCP': '#ffba0d', // Orange/Yellow
-    'BBVA': '#004481', // Blue
-    'Interbank': '#00a443', // Green
-    'Yape': '#742384', // Purple
-    'Plin': '#00d4aa', // Teal
-    'Efectivo': '#8e8e8e', // Gray
+    'PICHINCHA': '#ffba0d', // Yellow
+    'GUAYAQUIL': '#e31b23', // Red
+    'YAPE MARIELA': '#742384', // Purple
+    'YAPE DAYSI': '#742384', // Purple
+    'INTERBANK SOLES': '#00a443', // Green
+    'INTERBANK DOLARES': '#00a443', // Green
+    'PAYPAL': '#003087', // Blue
+    'WESTERN': '#ffcc00', // Yellow/Black
+    'NEQUI': '#2b0a3d', // Dark purple
+    'EFECTIVO': '#8e8e8e', // Gray
     'Desconocido': '#333333'
   };
 
