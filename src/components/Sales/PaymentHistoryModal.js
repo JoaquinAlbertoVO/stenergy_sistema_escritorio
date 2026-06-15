@@ -80,7 +80,7 @@ function PaymentHistoryModal({ sale, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: '650px' }}>
         <div className="modal-header">
           <h2>Historial de Pagos</h2>

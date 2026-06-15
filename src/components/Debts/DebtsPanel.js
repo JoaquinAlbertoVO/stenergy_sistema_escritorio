@@ -317,7 +317,7 @@ function DebtsPanel() {
 
       {/* Payment Modal */}
       {paymentModal && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setPaymentModal(null)}>
+        <div className="modal-overlay">
           <div className="modal-content modal-small">
             <div className="modal-header">
               <h2>Registrar Pago</h2>

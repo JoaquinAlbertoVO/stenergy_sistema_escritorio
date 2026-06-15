@@ -415,7 +415,7 @@ function Calendar() {
 
       {/* Edit Day Details Modal */}
       {showEditModal && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowEditModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content modal-small">
             <div className="modal-header">
               <h2>Detalles del Día</h2>
@@ -467,7 +467,7 @@ function Calendar() {
 
       {/* Add Course Modal */}
       {showAddModal && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content modal-small">
             <div className="modal-header">
               <h2>Programar Curso</h2>

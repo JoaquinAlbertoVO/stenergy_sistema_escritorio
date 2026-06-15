@@ -173,7 +173,7 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
   const debt = (Number(formData.totalAmount) || 0) - (Number(formData.paidAmount) || 0);
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
           <h2>{saleToEdit ? 'Editar Venta' : 'Registrar Nueva Venta'}</h2>

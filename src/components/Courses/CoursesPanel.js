@@ -7,6 +7,7 @@ function CoursesPanel() {
   const [courses, setCourses] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const loadCourses = () => {
     setCourses(getCourses());
@@ -51,8 +52,19 @@ function CoursesPanel() {
         </button>
       </div>
 
+      <div style={{ marginBottom: '24px' }}>
+        <input 
+          type="text" 
+          className="form-input" 
+          placeholder="🔍 Buscar curso por nombre o sigla..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: '100%', maxWidth: '400px' }}
+        />
+      </div>
+
       <div className="courses-grid">
-        {courses.map(course => (
+        {courses.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.shortName.toLowerCase().includes(searchTerm.toLowerCase())).map(course => (
           <div key={course.id} className="course-card">
             <div className="course-card-header">
               <div className="course-icon" style={{ color: course.color }}>
