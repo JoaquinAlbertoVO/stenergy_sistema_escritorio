@@ -1,185 +1,12 @@
-// ============================================
-// storage.js — API Backend (ya no usa localStorage para datos)
-// ============================================
-// La autenticación (sesión del usuario) sigue en localStorage.
-// Los datos (ventas, cursos, calendario) ahora van al backend API.
+import { supabase } from '../services/supabaseClient';
 
-const API_URL = process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000';
-
-// ============================================
-// Helper para peticiones HTTP
-// ============================================
-export async function apiFetch(endpoint, options = {}) {
-  const url = `${API_URL}${endpoint}`;
-  const config = {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  };
-
-  try {
-    const response = await fetch(url, config);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Error HTTP ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(`API Error [${endpoint}]:`, error);
-    throw error;
-  }
-}
-
-// ============================================
-// Cache local para reducir llamadas repetidas
-// ============================================
-let _salesCache = null;
-let _coursesCache = null;
-let _calendarCache = null;
-
-export async function preloadData() {
-  try {
-    _salesCache = await apiFetch('/api/sales').catch(() => []);
-    _coursesCache = await apiFetch('/api/courses').catch(() => []);
-    _calendarCache = await apiFetch('/api/calendar').catch(() => []);
-  } catch (e) {
-    console.error("Error preloading data", e);
-  }
-}
-
-export async function invalidateCache(type) {
-  if (!type || type === 'sales') _salesCache = await apiFetch('/api/sales').catch(() => []);
-  if (!type || type === 'courses') _coursesCache = await apiFetch('/api/courses').catch(() => []);
-  if (!type || type === 'calendar') _calendarCache = await apiFetch('/api/calendar').catch(() => []);
-}
-
-// ============================================
-// Sales
-// ============================================
-export function getSales() {
-  return _salesCache || [];
-}
-
-export async function addSale(sale) {
-  sale.id = 's' + Date.now();
-  // Preparar payments con ids
-  if (sale.payments) {
-    sale.payments = sale.payments.map((p, i) => ({
-      ...p,
-      id: `pay_${sale.id}_${i}`,
-      saleId: sale.id,
-    }));
-  }
-  const result = await apiFetch('/api/sales', {
-    method: 'POST',
-    body: JSON.stringify(sale),
-  });
-  await invalidateCache('sales');
-  return result;
-}
-
-export async function updateSale(id, updates) {
-  // Si updates tiene payments, necesitamos agregar ids y saleId
-  if (updates.payments) {
-    updates.payments = updates.payments.map((p, i) => ({
-      ...p,
-      id: p.id || `pay_${id}_${Date.now()}_${i}`,
-      saleId: id,
-    }));
-  }
-  const result = await apiFetch(`/api/sales/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(updates),
-  });
-  await invalidateCache('sales');
-  return result;
-}
-
-export async function deleteSale(id) {
-  await apiFetch(`/api/sales/${id}`, { method: 'DELETE' });
-  await invalidateCache('sales');
-}
-
-// ============================================
-// Courses
-// ============================================
-export function getCourses() {
-  return _coursesCache || [];
-}
-
-export async function addCourse(course) {
-  course.id = 'c' + Date.now();
-  const result = await apiFetch('/api/courses', {
-    method: 'POST',
-    body: JSON.stringify(course),
-  });
-  await invalidateCache('courses');
-  return result;
-}
-
-export async function updateCourse(id, updates) {
-  const result = await apiFetch(`/api/courses/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(updates),
-  });
-  await invalidateCache('courses');
-  return result;
-}
-
-export async function deleteCourse(id) {
-  await apiFetch(`/api/courses/${id}`, { method: 'DELETE' });
-  await invalidateCache('courses');
-}
-
-// ============================================
-// Calendar
-// ============================================
-export function getCalendarData() {
-  return _calendarCache || [];
-}
-
-export async function addCalendarEntry(entry) {
-  entry.id = 'cal' + Date.now();
-  const result = await apiFetch('/api/calendar', {
-    method: 'POST',
-    body: JSON.stringify(entry),
-  });
-  await invalidateCache('calendar');
-  return result;
-}
-
-export async function updateCalendarEntry(id, updates) {
-  const result = await apiFetch(`/api/calendar/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(updates),
-  });
-  await invalidateCache('calendar');
-  return result;
-}
-
-export async function deleteCalendarEntry(id) {
-  await apiFetch(`/api/calendar/${id}`, { method: 'DELETE' });
-  await invalidateCache('calendar');
-}
-
-// ============================================
-// Auth (sigue en localStorage — es local por naturaleza)
-// ============================================
 const KEYS = {
   CURRENT_USER: 'st_energy_current_user',
 };
 
-export function getUsers() {
-  // Users ahora también vienen del backend, pero mantenemos compatibilidad
-  return apiFetch('/api/users');
-}
-
-export function authenticateUser(username, password) {
-  return apiFetch('/api/auth', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  });
-}
-
+// ============================================
+// Auth (local storage is fine for session)
+// ============================================
 export function setCurrentUser(user) {
   localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(user));
 }
@@ -194,53 +21,196 @@ export function clearCurrentUser() {
 }
 
 // ============================================
-// Stats (calculada a partir de datos de la API)
+// Cache
 // ============================================
+let _salesCache = null;
+let _coursesCache = null;
+let _calendarCache = null;
+let _usersCache = null;
+
+export async function preloadData() {
+  try {
+    const [salesRes, coursesRes, calendarRes, usersRes] = await Promise.all([
+      supabase.from('sales').select('*, payments(*)'),
+      supabase.from('courses').select('*'),
+      supabase.from('calendar').select('*'),
+      supabase.from('users').select('*')
+    ]);
+    
+    _salesCache = salesRes.data || [];
+    _coursesCache = coursesRes.data || [];
+    _calendarCache = calendarRes.data || [];
+    _usersCache = usersRes.data || [];
+  } catch (e) {
+    console.error("Error preloading data from Supabase", e);
+  }
+}
+
+export async function invalidateCache(type) {
+  if (!type || type === 'sales') {
+    const res = await supabase.from('sales').select('*, payments(*)');
+    _salesCache = res.data || [];
+  }
+  if (!type || type === 'courses') {
+    const res = await supabase.from('courses').select('*');
+    _coursesCache = res.data || [];
+  }
+  if (!type || type === 'calendar') {
+    const res = await supabase.from('calendar').select('*');
+    _calendarCache = res.data || [];
+  }
+}
+
+// ============================================
+// Sales
+// ============================================
+export function getSales() {
+  return _salesCache || [];
+}
+
+export async function addSale(sale) {
+  sale.id = 's' + Date.now();
+  
+  const payments = sale.payments || [];
+  delete sale.payments;
+  
+  const { data, error } = await supabase.from('sales').insert([sale]).select();
+  if (error) throw error;
+  
+  if (payments.length > 0) {
+    const paymentsToInsert = payments.map((p, i) => ({
+      ...p,
+      id: `pay_${sale.id}_${i}`,
+      saleId: sale.id,
+    }));
+    const { error: payError } = await supabase.from('payments').insert(paymentsToInsert);
+    if (payError) throw payError;
+  }
+  
+  await invalidateCache('sales');
+  return data[0];
+}
+
+export async function updateSale(sale) {
+  const payments = sale.payments || [];
+  delete sale.payments;
+  
+  const { data, error } = await supabase.from('sales').update(sale).eq('id', sale.id).select();
+  if (error) throw error;
+  
+  // Replace payments
+  await supabase.from('payments').delete().eq('saleId', sale.id);
+  
+  if (payments.length > 0) {
+    const paymentsToInsert = payments.map((p, i) => ({
+      ...p,
+      id: `pay_${sale.id}_${i}_${Date.now()}`,
+      saleId: sale.id,
+    }));
+    const { error: payError } = await supabase.from('payments').insert(paymentsToInsert);
+    if (payError) throw payError;
+  }
+  
+  await invalidateCache('sales');
+  return data[0];
+}
+
+export async function deleteSale(id) {
+  const { error } = await supabase.from('sales').delete().eq('id', id);
+  if (error) throw error;
+  await invalidateCache('sales');
+}
+
 export function getSalesStats(userId = null) {
   let sales = getSales();
   if (userId) {
     sales = sales.filter(s => s.sellerId === userId);
   }
-
-  const totalSales = sales.length;
-  const totalRevenue = sales.reduce((sum, s) => sum + s.paidAmount, 0);
-  const totalDebt = sales.reduce((sum, s) => sum + (s.totalAmount - s.paidAmount), 0);
-  const pendingCertificates = sales.filter(s => s.status === 'pagado' && !s.certificateGenerated).length;
-  const paidSales = sales.filter(s => s.status === 'pagado').length;
-  const partialSales = sales.filter(s => s.status === 'parcial').length;
-  const pendingSales = sales.filter(s => s.status === 'pendiente').length;
-
+  
+  const totalSalesCount = sales.length;
+  const totalAmount = sales.reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+  const totalCollected = sales.reduce((sum, s) => sum + (Number(s.paidAmount) || 0), 0);
+  const pendingAmount = totalAmount - totalCollected;
+  
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  const thisMonthSales = sales.filter(s => {
+    const d = new Date(s.date);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+  
+  const thisMonthCount = thisMonthSales.length;
+  const thisMonthAmount = thisMonthSales.reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+  
   return {
-    totalSales,
-    totalRevenue,
-    totalDebt,
-    pendingCertificates,
-    paidSales,
-    partialSales,
-    pendingSales
+    totalSalesCount,
+    totalAmount,
+    totalCollected,
+    pendingAmount,
+    thisMonthCount,
+    thisMonthAmount
   };
 }
 
 // ============================================
-// Helper: Count courses on date (for Calendar)
+// Courses
 // ============================================
-export function getCoursesOnDate(dateStr) {
-  const calendar = getCalendarData();
-  return calendar.filter(entry => {
-    return dateStr >= entry.startDate && dateStr <= entry.endDate;
-  });
+export function getCourses() {
+  return _coursesCache || [];
+}
+
+export async function addCourse(course) {
+  course.id = 'c' + Date.now();
+  const { data, error } = await supabase.from('courses').insert([course]).select();
+  if (error) throw error;
+  await invalidateCache('courses');
+  return data[0];
+}
+
+export async function updateCourse(course) {
+  const { data, error } = await supabase.from('courses').update(course).eq('id', course.id).select();
+  if (error) throw error;
+  await invalidateCache('courses');
+  return data[0];
+}
+
+export async function deleteCourse(id) {
+  const { error } = await supabase.from('courses').delete().eq('id', id);
+  if (error) throw error;
+  await invalidateCache('courses');
 }
 
 // ============================================
-// Initialize — ya no necesita cargar datos demo
+// Calendar
 // ============================================
-export function initializeData() {
-  // No-op: los datos están en el backend
-  // La autenticación se maneja por separado
+export function getCalendarEvents() {
+  return _calendarCache || [];
+}
+
+export async function addCalendarEvent(event) {
+  event.id = 'evt' + Date.now();
+  const { data, error } = await supabase.from('calendar').insert([event]).select();
+  if (error) throw error;
+  await invalidateCache('calendar');
+  return data[0];
+}
+
+export async function updateCalendarEvent(event) {
+  const { data, error } = await supabase.from('calendar').update(event).eq('id', event.id).select();
+  if (error) throw error;
+  await invalidateCache('calendar');
+  return data[0];
+}
+
+export async function deleteCalendarEvent(id) {
+  const { error } = await supabase.from('calendar').delete().eq('id', id);
+  if (error) throw error;
+  await invalidateCache('calendar');
 }
 
 // ============================================
-// Migration helper — migrar datos de localStorage al backend
+// Migration helper
 // ============================================
 export async function migrateLocalStorageToBackend() {
   const localSales = localStorage.getItem('st_energy_sales');
@@ -252,25 +222,48 @@ export async function migrateLocalStorageToBackend() {
     return { migrated: false, message: 'No hay datos locales para migrar' };
   }
 
-  const data = {
-    sales: localSales ? JSON.parse(localSales) : [],
-    courses: localCourses ? JSON.parse(localCourses) : [],
-    calendar: localCalendar ? JSON.parse(localCalendar) : [],
-    users: localUsers ? JSON.parse(localUsers) : [],
-  };
-
   try {
-    const result = await apiFetch('/api/migrate', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    if (localCourses) {
+      const courses = JSON.parse(localCourses);
+      for (const c of courses) {
+        await supabase.from('courses').upsert(c);
+      }
+    }
+    if (localSales) {
+      const sales = JSON.parse(localSales);
+      for (const s of sales) {
+        const payments = s.payments || [];
+        const saleCopy = { ...s };
+        delete saleCopy.payments;
+        
+        await supabase.from('sales').upsert(saleCopy);
+        for (const p of payments) {
+          await supabase.from('payments').upsert({
+            ...p,
+            id: p.id || `pay_${s.id}_${Math.random()}`,
+            saleId: s.id
+          });
+        }
+      }
+    }
+    if (localCalendar) {
+      const cal = JSON.parse(localCalendar);
+      for (const e of cal) {
+        await supabase.from('calendar').upsert(e);
+      }
+    }
+    if (localUsers) {
+      const users = JSON.parse(localUsers);
+      for (const u of users) {
+        await supabase.from('users').upsert(u);
+      }
+    }
 
-    // Marcar como migrado para no volver a hacerlo
     localStorage.setItem('st_energy_migrated_to_api', 'true');
-    
-    return { migrated: true, message: 'Datos migrados exitosamente', result };
+    await invalidateCache();
+    return { migrated: true, message: 'Datos migrados exitosamente a Supabase' };
   } catch (error) {
-    return { migrated: false, message: `Error migrando: ${error.message}` };
+    return { migrated: false, message: `Error migrando a Supabase: ${error.message}` };
   }
 }
 
