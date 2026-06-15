@@ -7,8 +7,6 @@ import CountUp from '../ui/CountUp/CountUp';
 import ElectricBorder from '../ui/ElectricBorder/ElectricBorder';
 import SpotlightCard from '../ui/SpotlightCard/SpotlightCard';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import './Sales.css';
 
 const getCountryFlag = (phone) => {
@@ -75,60 +73,19 @@ function SalesPanel() {
   };
 
   const handleExportExcel = () => {
-    const dataToExport = filteredSales.map(sale => ({
-      Fecha: new Date(sale.date).toLocaleDateString('es-PE'),
-      Cliente: sale.clientName,
-      DNI: sale.clientDni,
-      Teléfono: sale.clientPhone || '',
-      Email: sale.clientEmail || '',
-      Curso: sale.courseName,
-      Modalidad: sale.modality,
-      Total: sale.totalAmount,
-      Pagado: sale.paidAmount,
-      Deuda: sale.totalAmount - (sale.paidAmount || 0),
-      Estado: sale.status,
-      Asesor: sale.sellerName
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const worksheet = XLSX.utils.json_to_sheet(filteredSales.map(sale => ({
+      'Fecha': new Date(sale.date).toLocaleDateString('es-PE'),
+      'Cliente': sale.clientName,
+      'DNI': sale.clientDni,
+      'Curso': sale.courseName,
+      'Modalidad': sale.modality,
+      'Total (S/)': sale.totalAmount,
+      'Pagado (S/)': sale.paidAmount || 0,
+      'Estado': sale.status
+    })));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Ventas");
     XLSX.writeFile(workbook, `Reporte_Ventas_${new Date().toLocaleDateString('es-PE').replace(/\//g, '-')}.xlsx`);
-  };
-
-  const handleExportPDF = () => {
-    const doc = new jsPDF('landscape');
-    
-    doc.setFontSize(18);
-    doc.text("Reporte de Ventas", 14, 22);
-    doc.setFontSize(11);
-    doc.text(`Fecha de exportación: ${new Date().toLocaleDateString('es-PE')}`, 14, 30);
-
-    const tableColumn = ["Fecha", "Cliente", "DNI", "Curso", "Modalidad", "Total", "Pagado", "Estado"];
-    const tableRows = [];
-
-    filteredSales.forEach(sale => {
-      const saleData = [
-        new Date(sale.date).toLocaleDateString('es-PE'),
-        sale.clientName,
-        sale.clientDni,
-        sale.courseName,
-        sale.modality,
-        `S/ ${sale.totalAmount}`,
-        `S/ ${sale.paidAmount || 0}`,
-        sale.status
-      ];
-      tableRows.push(saleData);
-    });
-
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 35,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [255, 186, 13], textColor: [0, 0, 0] }
-    });
-
-    doc.save(`Reporte_Ventas_${new Date().toLocaleDateString('es-PE').replace(/\//g, '-')}.pdf`);
   };
 
   const handleDeleteSale = async (saleId) => {
@@ -278,15 +235,6 @@ function SalesPanel() {
                   <polyline points="10 9 9 9 8 9"/>
                 </svg>
                 Excel
-              </button>
-              
-              <button className="btn-secondary btn-export-pdf" onClick={handleExportPDF} style={{ whiteSpace: 'nowrap', borderColor: 'rgba(255, 71, 87, 0.4)', color: '#ff4757' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <path d="M9 15v-6h3.5a2.5 2.5 0 0 1 0 5H9"/>
-                </svg>
-                PDF
               </button>
 
               <ElectricBorder borderRadius={8} color="#ffba0d" speed={2} className="nueva-venta-border">

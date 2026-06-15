@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { fetchGoogleSheetData } from './services/googleSheetsService';
 
 import Login from './components/Auth/Login';
@@ -128,11 +129,13 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <Router basename="/sistema">
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router basename="/sistema">
+          <AppRoutes />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
