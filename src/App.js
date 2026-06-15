@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { SettingsProvider } from './context/SettingsContext';
 import { fetchGoogleSheetData } from './services/googleSheetsService';
 
 import Login from './components/Auth/Login';
@@ -14,6 +14,7 @@ import PaymentsPanel from './components/Payments/PaymentsPanel';
 import Calendar from './components/Calendar/Calendar';
 import CoursesPanel from './components/Courses/CoursesPanel';
 import CertificatesPanel from './components/Certificates/CertificatesPanel';
+import SettingsPanel from './components/Settings/SettingsPanel';
 
 import './App.css';
 
@@ -110,6 +111,12 @@ function AppRoutes() {
         </PrivateRoute>
       } />
       
+      <Route path="/configuracion" element={
+        <PrivateRoute roles={['admin', 'asesor1', 'asesor2']}>
+          <AppLayout><SettingsPanel /></AppLayout>
+        </PrivateRoute>
+      } />
+      
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
@@ -129,13 +136,13 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider>
+    <SettingsProvider>
       <AuthProvider>
         <Router basename="/sistema">
           <AppRoutes />
         </Router>
       </AuthProvider>
-    </ThemeProvider>
+    </SettingsProvider>
   );
 }
 
