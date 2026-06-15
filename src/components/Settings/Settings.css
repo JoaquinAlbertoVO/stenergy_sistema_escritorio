@@ -62,8 +62,10 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="light"] .setting-row:hover {
-  background: rgba(255, 255, 255, 0.4);
+[data-theme="light"] .setting-row:hover,
+[data-theme="sienna"] .setting-row:hover,
+[data-theme="sage"] .setting-row:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .setting-info {
@@ -99,42 +101,6 @@
   border-color: var(--color-primary);
 }
 
-/* Toggle Switch */
-.theme-switch {
-  position: relative;
-  width: 50px;
-  height: 26px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 3px;
-  border: 1px solid var(--border-color);
-  transition: background 0.3s;
-}
-
-[data-theme='light'] .theme-switch {
-  background: rgba(0,0,0,0.1);
-}
-
-.theme-switch.active {
-  background: var(--color-primary);
-}
-
-.theme-switch-knob {
-  width: 20px;
-  height: 20px;
-  background: #ffffff;
-  border-radius: 50%;
-  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.theme-switch.active .theme-switch-knob {
-  transform: translateX(24px);
-}
-
 /* Version badge */
 .version-badge {
   background: rgba(255, 186, 13, 0.15);
@@ -146,7 +112,9 @@
   border: 1px solid rgba(255, 186, 13, 0.3);
 }
 
-[data-theme="light"] .version-badge {
+[data-theme="light"] .version-badge,
+[data-theme="sienna"] .version-badge,
+[data-theme="sage"] .version-badge {
   background: rgba(74, 127, 60, 0.15);
   color: var(--color-primary);
   border-color: rgba(74, 127, 60, 0.3);

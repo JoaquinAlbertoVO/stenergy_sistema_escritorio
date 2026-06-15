@@ -90,72 +90,124 @@ code {
 }
 
 
-/* --- LIGHT MODE GLOBAL OVERRIDES FOR MAXIMUM CONTRAST --- */
-[data-theme='light'] {
+/* --- LIGHT THEME GLOBAL OVERRIDES FOR MAXIMUM CONTRAST --- */
+[data-theme='light'],
+[data-theme='sienna'],
+[data-theme='sage'] {
   --overlay-light: rgba(0, 0, 0, 0.04);
   --overlay-medium: rgba(0, 0, 0, 0.08);
   --overlay-strong: rgba(0, 0, 0, 0.15);
 }
 
-[data-theme='light'] .dashboard-card,
-[data-theme='light'] .kpi-card,
-[data-theme='light'] .stat-card,
-[data-theme='light'] .sales-table-container,
-[data-theme='light'] .courses-panel,
-[data-theme='light'] .payment-history-list,
-[data-theme='light'] .calendar-container,
-[data-theme='light'] .modal-content,
-[data-theme='light'] .form-container {
+[data-theme='light'] .dashboard-card, [data-theme='sienna'] .dashboard-card, [data-theme='sage'] .dashboard-card,
+[data-theme='light'] .kpi-card, [data-theme='sienna'] .kpi-card, [data-theme='sage'] .kpi-card,
+[data-theme='light'] .stat-card, [data-theme='sienna'] .stat-card, [data-theme='sage'] .stat-card,
+[data-theme='light'] .sales-table-container, [data-theme='sienna'] .sales-table-container, [data-theme='sage'] .sales-table-container,
+[data-theme='light'] .courses-panel, [data-theme='sienna'] .courses-panel, [data-theme='sage'] .courses-panel,
+[data-theme='light'] .payment-history-list, [data-theme='sienna'] .payment-history-list, [data-theme='sage'] .payment-history-list,
+[data-theme='light'] .calendar-container, [data-theme='sienna'] .calendar-container, [data-theme='sage'] .calendar-container,
+[data-theme='light'] .modal-content, [data-theme='sienna'] .modal-content, [data-theme='sage'] .modal-content,
+[data-theme='light'] .form-container, [data-theme='sienna'] .form-container, [data-theme='sage'] .form-container {
   background: var(--bg-card) !important;
   border: 1px solid var(--border-color) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
 }
 
-[data-theme='light'] .btn-primary {
+[data-theme='light'] .btn-primary, [data-theme='sienna'] .btn-primary, [data-theme='sage'] .btn-primary {
   color: #ffffff !important;
 }
 
-[data-theme='light'] .btn-secondary,
-[data-theme='light'] .filter-select,
-[data-theme='light'] .form-input,
-[data-theme='light'] .modal-close {
+[data-theme='light'] .btn-secondary, [data-theme='sienna'] .btn-secondary, [data-theme='sage'] .btn-secondary,
+[data-theme='light'] .filter-select, [data-theme='sienna'] .filter-select, [data-theme='sage'] .filter-select,
+[data-theme='light'] .form-input, [data-theme='sienna'] .form-input, [data-theme='sage'] .form-input,
+[data-theme='light'] .modal-close, [data-theme='sienna'] .modal-close, [data-theme='sage'] .modal-close {
   background: var(--bg-primary) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-color) !important;
 }
 
-[data-theme='light'] .btn-secondary:hover,
-[data-theme='light'] .filter-select:hover,
-[data-theme='light'] .modal-close:hover,
-[data-theme='light'] .recent-sale-item:hover,
-[data-theme='light'] .sales-table tbody tr:hover,
-[data-theme='light'] .fc-daygrid-day:hover {
+[data-theme='light'] .btn-secondary:hover, [data-theme='sienna'] .btn-secondary:hover, [data-theme='sage'] .btn-secondary:hover,
+[data-theme='light'] .filter-select:hover, [data-theme='sienna'] .filter-select:hover, [data-theme='sage'] .filter-select:hover,
+[data-theme='light'] .modal-close:hover, [data-theme='sienna'] .modal-close:hover, [data-theme='sage'] .modal-close:hover,
+[data-theme='light'] .recent-sale-item:hover, [data-theme='sienna'] .recent-sale-item:hover, [data-theme='sage'] .recent-sale-item:hover,
+[data-theme='light'] .sales-table tbody tr:hover, [data-theme='sienna'] .sales-table tbody tr:hover, [data-theme='sage'] .sales-table tbody tr:hover,
+[data-theme='light'] .fc-daygrid-day:hover, [data-theme='sienna'] .fc-daygrid-day:hover, [data-theme='sage'] .fc-daygrid-day:hover {
   background: var(--overlay-medium) !important;
 }
 
-[data-theme='light'] .recent-sale-item,
-[data-theme='light'] .sales-table tbody tr,
-[data-theme='light'] .cert-pending {
+[data-theme='light'] .recent-sale-item, [data-theme='sienna'] .recent-sale-item, [data-theme='sage'] .recent-sale-item,
+[data-theme='light'] .sales-table tbody tr, [data-theme='sienna'] .sales-table tbody tr, [data-theme='sage'] .sales-table tbody tr,
+[data-theme='light'] .cert-pending, [data-theme='sienna'] .cert-pending, [data-theme='sage'] .cert-pending {
   background: transparent !important;
 }
 
-[data-theme='light'] .progress-track,
-[data-theme='light'] .seller-bar-wrapper {
+[data-theme='light'] .progress-track, [data-theme='sienna'] .progress-track, [data-theme='sage'] .progress-track,
+[data-theme='light'] .seller-bar-wrapper, [data-theme='sienna'] .seller-bar-wrapper, [data-theme='sage'] .seller-bar-wrapper {
   background: var(--overlay-strong) !important;
 }
 
-[data-theme='light'] .form-input:focus,
-[data-theme='light'] .filter-select:focus {
+[data-theme='light'] .form-input:focus, [data-theme='sienna'] .form-input:focus, [data-theme='sage'] .form-input:focus,
+[data-theme='light'] .filter-select:focus, [data-theme='sienna'] .filter-select:focus, [data-theme='sage'] .filter-select:focus {
   background: #ffffff !important;
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2) !important;
 }
 
-[data-theme='light'] .sales-table th {
+[data-theme='light'] .sales-table th, [data-theme='sienna'] .sales-table th, [data-theme='sage'] .sales-table th {
   color: var(--text-secondary) !important;
 }
 
-[data-theme='light'] .sales-table td {
+[data-theme='light'] .sales-table td, [data-theme='sienna'] .sales-table td, [data-theme='sage'] .sales-table td {
   color: var(--text-primary) !important;
+}
+
+
+/* --- NEW THEMES --- */
+[data-theme='ocean'] {
+  --bg-primary: #0E2C40;
+  --bg-sidebar: #081627;
+  --bg-card: rgba(26, 74, 90, 0.4);
+  --border-color: rgba(20, 141, 141, 0.2);
+  --color-primary: #148D8D;
+  --color-secondary: #C1E1A7;
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-muted: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme='sunset'] {
+  --bg-primary: #2B1437;
+  --bg-sidebar: #1F0E2A;
+  --bg-card: rgba(92, 26, 61, 0.4);
+  --border-color: rgba(255, 87, 34, 0.2);
+  --color-primary: #FFB300;
+  --color-secondary: #FF5722;
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-muted: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme='sienna'] {
+  --bg-primary: #F5F5DC;
+  --bg-sidebar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --border-color: rgba(160, 82, 45, 0.15);
+  --color-primary: #E35336;
+  --color-secondary: #F4A460;
+  --text-primary: #2C1A14;
+  --text-secondary: rgba(44, 26, 20, 0.7);
+  --text-muted: rgba(44, 26, 20, 0.5);
+}
+
+[data-theme='sage'] {
+  --bg-primary: #EAE6D1;
+  --bg-sidebar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --border-color: rgba(78, 103, 78, 0.15);
+  --color-primary: #4E674E;
+  --color-secondary: #698B69;
+  --text-primary: #1F291F;
+  --text-secondary: rgba(31, 41, 31, 0.8);
+  --text-muted: rgba(31, 41, 31, 0.6);
 }
 
