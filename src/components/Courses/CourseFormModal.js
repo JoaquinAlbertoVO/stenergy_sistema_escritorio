@@ -46,6 +46,7 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
     cpanelFolder: CPANEL_FOLDERS[0]
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (courseToEdit) {
@@ -75,22 +76,29 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const courseData = {
-      ...formData,
-      price: Number(formData.price)
-    };
+    setIsSubmitting(true);
+    try {
+      const courseData = {
+        ...formData,
+        price: Number(formData.price)
+      };
 
-    if (courseToEdit) {
-      updateCourse(courseToEdit.id, courseData);
-    } else {
-      addCourse(courseData);
+      if (courseToEdit) {
+        await updateCourse(courseToEdit.id, courseData);
+      } else {
+        await addCourse(courseData);
+      }
+      
+      onSave();
+    } catch (error) {
+      console.error("Error saving course", error);
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    onSave();
   };
 
   return (
@@ -232,9 +240,9 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn-primary">
-              {courseToEdit ? 'Guardar Cambios' : 'Crear Curso'}
+            <button type="button" className="btn-secondary" onClick={onClose} disabled={isSubmitting}>Cancelar</button>
+            <button type="submit" className={`btn-primary ${isSubmitting ? 'generating' : ''}`} disabled={isSubmitting}>
+              {isSubmitting ? 'Guardando...' : (courseToEdit ? 'Guardar Cambios' : 'Crear Curso')}
             </button>
           </div>
         </form>
