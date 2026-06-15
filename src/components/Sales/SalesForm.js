@@ -19,6 +19,7 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
     paymentDate: saleToEdit?.date || new Date().toISOString().split('T')[0]
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dniAutoFilled, setDniAutoFilled] = useState(false);
   const coursesList = getCourses();
   const allSales = getSales();
@@ -107,56 +108,66 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
     e.preventDefault();
     if (!validate()) return;
 
-    const paid = Number(formData.paidAmount) || 0;
-    const total = Number(formData.totalAmount);
-    let status = 'pendiente';
-    if (paid >= total) status = 'pagado';
-    else if (paid > 0) status = 'parcial';
+    setIsSubmitting(true);
+    try {
+      const paid = Number(formData.paidAmount) || 0;
+      const total = Number(formData.totalAmount);
+      let status = 'pendiente';
+      if (paid >= total) status = 'pagado';
+      else if (paid > 0) status = 'parcial';
 
-    const course = availableCourses.find(c => c.id === formData.courseId);
+      const course = availableCourses.find(c => c.id === formData.courseId);
 
-    const initialPayment = paid > 0 ? [{
-      date: formData.paymentDate,
-      amount: paid,
-      account: formData.paymentAccount
-    }] : [];
+      const initialPayment = paid > 0 ? [{
+        date: formData.paymentDate,
+        amount: paid,
+        account: formData.paymentAccount
+      }] : [];
 
-    const sale = {
-      clientName: formData.clientName.trim(),
-      clientDni: formData.clientDni.trim(),
-      clientPhone: formData.clientPhone.trim(),
-      clientEmail: formData.clientEmail.trim(),
-      courseId: formData.courseId,
-      courseName: course?.name || '',
-      totalAmount: total,
-      paidAmount: paid,
-      payments: saleToEdit ? saleToEdit.payments : initialPayment,
-      status,
-      certificateGenerated: saleToEdit ? saleToEdit.certificateGenerated : false,
-      modality: formData.modality,
-      sellerId: saleToEdit ? saleToEdit.sellerId : user.id,
-      sellerName: saleToEdit ? saleToEdit.sellerName : user.name,
-      date: saleToEdit ? saleToEdit.date : new Date().toISOString().split('T')[0]
-    };
+      const sale = {
+        clientName: formData.clientName.trim(),
+        clientDni: formData.clientDni.trim(),
+        clientPhone: formData.clientPhone.trim(),
+        clientEmail: formData.clientEmail.trim(),
+        courseId: formData.courseId,
+        courseName: course?.name || '',
+        totalAmount: total,
+        paidAmount: paid,
+        payments: saleToEdit ? saleToEdit.payments : initialPayment,
+        status,
+        certificateGenerated: saleToEdit ? saleToEdit.certificateGenerated : false,
+        modality: formData.modality,
+        sellerId: saleToEdit ? saleToEdit.sellerId : user.id,
+        sellerName: saleToEdit ? saleToEdit.sellerName : user.name,
+        date: saleToEdit ? saleToEdit.date : new Date().toISOString().split('T')[0]
+      };
 
-    if (saleToEdit) {
-      // Editar venta existente
-      updateSale(saleToEdit.id, sale);
-    } else {
-      // Guardar nueva venta localmente
-      addSale(sale);
-
-      // Intentar inscribir en WordPress/TutorLMS usando el servicio solo en creación
-      const wpResult = await enrollStudent(sale.clientEmail, sale.clientName, sale.courseId, sale.clientDni);
-      
-      if (!wpResult.success) {
-        alert(`Venta registrada localmente, PERO hubo un problema inscribiendo en WordPress: ${wpResult.error}`);
+      if (saleToEdit) {
+        // Editar venta existente
+        await updateSale(saleToEdit.id, sale);
+        alert("¡Cambios guardados con éxito!");
       } else {
-        console.log('Inscripción exitosa en WP:', wpResult.data);
-      }
-    }
+        // Guardar nueva venta localmente
+        await addSale(sale);
 
-    onSave();
+        // Intentar inscribir en WordPress/TutorLMS usando el servicio solo en creación
+        const wpResult = await enrollStudent(sale.clientEmail, sale.clientName, sale.courseId, sale.clientDni);
+        
+        if (!wpResult.success) {
+          alert(`Venta registrada localmente, PERO hubo un problema inscribiendo en WordPress: ${wpResult.error}`);
+        } else {
+          alert("¡Venta registrada e inscrita en WordPress con éxito!");
+          console.log('Inscripción exitosa en WP:', wpResult.data);
+        }
+      }
+
+      onSave();
+    } catch (error) {
+      console.error("Error al guardar la venta:", error);
+      alert("Ocurrió un error al guardar la venta. Revisa tu conexión o intenta nuevamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const debt = (Number(formData.totalAmount) || 0) - (Number(formData.paidAmount) || 0);
@@ -327,14 +338,14 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn-primary">
+            <button type="button" className="btn-secondary" onClick={onClose} disabled={isSubmitting}>Cancelar</button>
+            <button type="submit" className={`btn-primary ${isSubmitting ? 'generating' : ''}`} disabled={isSubmitting}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                 <polyline points="17 21 17 13 7 13 7 21"/>
                 <polyline points="7 3 7 8 15 8"/>
               </svg>
-              {saleToEdit ? 'Guardar Cambios' : 'Registrar Venta'}
+              {isSubmitting ? 'Guardando...' : (saleToEdit ? 'Guardar Cambios' : 'Registrar Venta')}
             </button>
           </div>
         </form>

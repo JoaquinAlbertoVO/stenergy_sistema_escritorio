@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getSales, getCourses } from '../../utils/storage';
+import { getSales, getCourses, deleteSale } from '../../utils/storage';
 import SalesForm from './SalesForm';
 import PaymentHistoryModal from './PaymentHistoryModal';
 import CountUp from '../ui/CountUp/CountUp';
@@ -42,6 +42,7 @@ function SalesPanel() {
   const [filterModality, setFilterModality] = useState('all');
   const [filterMonth, setFilterMonth] = useState('all');
   const [filterAccount, setFilterAccount] = useState('all');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const coursesList = getCourses();
 
@@ -128,6 +129,22 @@ function SalesPanel() {
     });
 
     doc.save(`Reporte_Ventas_${new Date().toLocaleDateString('es-PE').replace(/\//g, '-')}.pdf`);
+  };
+
+  const handleDeleteSale = async (saleId) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar esta venta permanentemente? Esto afectará los totales financieros del Dashboard.")) {
+      try {
+        setIsDeleting(true);
+        await deleteSale(saleId);
+        await loadSales();
+        alert("Venta eliminada con éxito.");
+      } catch (error) {
+        console.error("Error al eliminar la venta:", error);
+        alert("Hubo un problema al eliminar la venta.");
+      } finally {
+        setIsDeleting(false);
+      }
+    }
   };
 
   const filteredSales = sales.filter(sale => {
@@ -346,6 +363,7 @@ function SalesPanel() {
                       setEditingSale(sale);
                       setShowForm(true);
                     }}
+                    disabled={isDeleting}
                     title="Editar Venta"
                   >
                     Editar
@@ -354,9 +372,25 @@ function SalesPanel() {
                     className="btn-secondary" 
                     style={{ padding: '4px 8px', fontSize: '0.75rem' }}
                     onClick={() => setSelectedSaleForPayments(sale)}
+                    disabled={isDeleting}
                     title="Ver Historial de Pagos"
                   >
-                    Pagos
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  </button>
+                  <button 
+                    className="btn-secondary" 
+                    style={{ padding: '4px 8px', fontSize: '0.75rem', borderColor: 'rgba(255, 71, 87, 0.4)', color: '#ff4757' }}
+                    onClick={() => handleDeleteSale(sale.id)}
+                    disabled={isDeleting}
+                    title="Eliminar Venta"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
                   </button>
                 </td>
               </tr>
