@@ -124,8 +124,7 @@ function PaymentsPanel() {
     'GUAYAQUIL': '#e31b23', // Red
     'YAPE MARIELA': '#742384', // Purple
     'YAPE DAYSI': '#742384', // Purple
-    'INTERBANK SOLES': '#00a443', // Green
-    'INTERBANK DOLARES': '#00a443', // Green
+    'INTERBANK': '#00a443', // Green
     'PAYPAL': '#003087', // Blue
     'WESTERN': '#ffcc00', // Yellow/Black
     'NEQUI': '#2b0a3d', // Dark purple

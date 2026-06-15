@@ -35,6 +35,44 @@ const PrivateRoute = ({ children, roles }) => {
 };
 
 const AppLayout = ({ children }) => {
+  useEffect(() => {
+    // ONE-TIME MIGRATION FOR PAYMENT METHODS IN LOCALSTORAGE
+    try {
+      const rawSales = localStorage.getItem('st_energy_sales');
+      if (rawSales) {
+        let sales = JSON.parse(rawSales);
+        let changed = false;
+        
+        // Remove BCP sales
+        const filteredSales = sales.filter(s => s.account !== 'BCP');
+        if (filteredSales.length !== sales.length) changed = true;
+        
+        filteredSales.forEach(s => {
+          if (s.account === 'Yape' || s.account === 'YAPE Mariela' || s.account === 'Yape Mariela') { s.account = 'YAPE MARIELA'; changed = true; }
+          if (s.account === 'Interbank' || s.account === 'INTERBANK SOLES' || s.account === 'INTERBANK DOLARES') { s.account = 'INTERBANK'; changed = true; }
+          
+          if (s.payments) {
+            const oldLen = s.payments.length;
+            s.payments = s.payments.filter(p => p.account !== 'BCP');
+            if (s.payments.length !== oldLen) changed = true;
+            
+            s.payments.forEach(p => {
+               if (p.account === 'Yape' || p.account === 'YAPE Mariela' || p.account === 'Yape Mariela') { p.account = 'YAPE MARIELA'; changed = true; }
+               if (p.account === 'Interbank' || p.account === 'INTERBANK SOLES' || p.account === 'INTERBANK DOLARES') { p.account = 'INTERBANK'; changed = true; }
+            });
+          }
+        });
+        
+        if (changed) {
+          localStorage.setItem('st_energy_sales', JSON.stringify(filteredSales));
+          console.log('Migrated payment methods in localStorage');
+        }
+      }
+    } catch (e) {
+      console.error('Error during payment migration', e);
+    }
+  }, []);
+
   return (
     <div className="app-container">
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>

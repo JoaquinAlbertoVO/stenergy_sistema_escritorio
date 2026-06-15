@@ -133,8 +133,7 @@ function PaymentHistoryModal({ sale, onClose, onSave }) {
                             <option value="GUAYAQUIL">GUAYAQUIL</option>
                             <option value="YAPE MARIELA">YAPE MARIELA</option>
                             <option value="YAPE DAYSI">YAPE DAYSI</option>
-                            <option value="INTERBANK SOLES">INTERBANK SOLES</option>
-                            <option value="INTERBANK DOLARES">INTERBANK DOLARES</option>
+                            <option value="INTERBANK">INTERBANK</option>
                             <option value="PAYPAL">PAYPAL</option>
                             <option value="WESTERN">WESTERN</option>
                             <option value="NEQUI">NEQUI</option>
@@ -233,8 +232,7 @@ function PaymentHistoryModal({ sale, onClose, onSave }) {
                       <option value="GUAYAQUIL">GUAYAQUIL</option>
                       <option value="YAPE MARIELA">YAPE MARIELA</option>
                       <option value="YAPE DAYSI">YAPE DAYSI</option>
-                      <option value="INTERBANK SOLES">INTERBANK SOLES</option>
-                      <option value="INTERBANK DOLARES">INTERBANK DOLARES</option>
+                      <option value="INTERBANK">INTERBANK</option>
                       <option value="PAYPAL">PAYPAL</option>
                       <option value="WESTERN">WESTERN</option>
                       <option value="NEQUI">NEQUI</option>
