@@ -23,7 +23,7 @@
 }
 
 select option {
-  background-color: #030014;
+  background-color: var(--bg-primary);
   color: var(--text-primary);
 }
 
@@ -74,11 +74,6 @@ code {
   --text-primary: #121212; /* Almost black */
   --text-secondary: #424242; /* Dark gray */
   --text-muted: #757575; /* Medium gray */
-}
-
-[data-theme='light'] select option {
-  background-color: #F7F2CF;
-  color: var(--text-primary);
 }
 
 [data-theme='light'] ::-webkit-scrollbar-thumb {
