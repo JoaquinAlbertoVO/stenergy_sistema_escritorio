@@ -259,7 +259,7 @@ export async function migrateLocalStorageToBackend() {
       }
     }
 
-    localStorage.setItem('st_energy_migrated_to_api', 'true');
+    localStorage.setItem('st_energy_migrated_to_supabase', 'true');
     await invalidateCache();
     return { migrated: true, message: 'Datos migrados exitosamente a Supabase' };
   } catch (error) {
@@ -268,7 +268,7 @@ export async function migrateLocalStorageToBackend() {
 }
 
 export function needsMigration() {
-  const hasMigrated = localStorage.getItem('st_energy_migrated_to_api');
+  const hasMigrated = localStorage.getItem('st_energy_migrated_to_supabase');
   const hasLocalData = localStorage.getItem('st_energy_sales') || localStorage.getItem('st_energy_courses');
   return !hasMigrated && !!hasLocalData;
 }
