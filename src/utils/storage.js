@@ -184,11 +184,11 @@ export async function deleteCourse(id) {
 // ============================================
 // Calendar
 // ============================================
-export function getCalendarEvents() {
+export function getCalendarData() {
   return _calendarCache || [];
 }
 
-export async function addCalendarEvent(event) {
+export async function addCalendarEntry(event) {
   event.id = 'evt' + Date.now();
   const { data, error } = await supabase.from('calendar').insert([event]).select();
   if (error) throw error;
@@ -196,14 +196,14 @@ export async function addCalendarEvent(event) {
   return data[0];
 }
 
-export async function updateCalendarEvent(event) {
+export async function updateCalendarEntry(event) {
   const { data, error } = await supabase.from('calendar').update(event).eq('id', event.id).select();
   if (error) throw error;
   await invalidateCache('calendar');
   return data[0];
 }
 
-export async function deleteCalendarEvent(id) {
+export async function deleteCalendarEntry(id) {
   const { error } = await supabase.from('calendar').delete().eq('id', id);
   if (error) throw error;
   await invalidateCache('calendar');
