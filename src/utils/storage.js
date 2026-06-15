@@ -39,7 +39,6 @@ export async function preloadData() {
     _salesCache = salesRes.data || [];
     _coursesCache = coursesRes.data || [];
     _calendarCache = calendarRes.data || [];
-    _usersCache = usersRes.data || [];
   } catch (e) {
     console.error("Error preloading data from Supabase", e);
   }
