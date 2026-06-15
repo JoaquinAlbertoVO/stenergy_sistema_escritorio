@@ -63,17 +63,17 @@ code {
 }
 
 [data-theme='light'] {
-  --bg-primary: #F7F2CF;
-  --bg-sidebar: #CFE28D;
-  --bg-card: rgba(207, 226, 141, 0.7);
-  --border-color: rgba(47, 61, 42, 0.15);
+  --bg-primary: #F0F4F2;
+  --bg-sidebar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --border-color: rgba(0, 0, 0, 0.12);
   
-  --color-primary: #4A7F3C;
-  --color-secondary: #8FBE4D;
+  --color-primary: #1B5E20; /* Very dark green */
+  --color-secondary: #4CAF50; /* Base green */
   
-  --text-primary: #2F3D2A;
-  --text-secondary: rgba(47, 61, 42, 0.8);
-  --text-muted: rgba(47, 61, 42, 0.6);
+  --text-primary: #121212; /* Almost black */
+  --text-secondary: #424242; /* Dark gray */
+  --text-muted: #757575; /* Medium gray */
 }
 
 [data-theme='light'] select option {
@@ -87,5 +87,75 @@ code {
 
 [data-theme='light'] ::-webkit-scrollbar-thumb:hover {
   background: rgba(47, 61, 42, 0.4);
+}
+
+
+/* --- LIGHT MODE GLOBAL OVERRIDES FOR MAXIMUM CONTRAST --- */
+[data-theme='light'] {
+  --overlay-light: rgba(0, 0, 0, 0.04);
+  --overlay-medium: rgba(0, 0, 0, 0.08);
+  --overlay-strong: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .dashboard-card,
+[data-theme='light'] .kpi-card,
+[data-theme='light'] .stat-card,
+[data-theme='light'] .sales-table-container,
+[data-theme='light'] .courses-panel,
+[data-theme='light'] .payment-history-list,
+[data-theme='light'] .calendar-container,
+[data-theme='light'] .modal-content,
+[data-theme='light'] .form-container {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme='light'] .btn-primary {
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .btn-secondary,
+[data-theme='light'] .filter-select,
+[data-theme='light'] .form-input,
+[data-theme='light'] .modal-close {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme='light'] .btn-secondary:hover,
+[data-theme='light'] .filter-select:hover,
+[data-theme='light'] .modal-close:hover,
+[data-theme='light'] .recent-sale-item:hover,
+[data-theme='light'] .sales-table tbody tr:hover,
+[data-theme='light'] .fc-daygrid-day:hover {
+  background: var(--overlay-medium) !important;
+}
+
+[data-theme='light'] .recent-sale-item,
+[data-theme='light'] .sales-table tbody tr,
+[data-theme='light'] .cert-pending {
+  background: transparent !important;
+}
+
+[data-theme='light'] .progress-track,
+[data-theme='light'] .seller-bar-wrapper {
+  background: var(--overlay-strong) !important;
+}
+
+[data-theme='light'] .form-input:focus,
+[data-theme='light'] .filter-select:focus {
+  background: #ffffff !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2) !important;
+}
+
+[data-theme='light'] .sales-table th {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme='light'] .sales-table td {
+  color: var(--text-primary) !important;
 }
 
