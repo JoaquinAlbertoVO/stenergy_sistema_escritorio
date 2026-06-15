@@ -29,11 +29,10 @@ let _calendarCache = null;
 
 export async function preloadData() {
   try {
-    const [salesRes, coursesRes, calendarRes, usersRes] = await Promise.all([
+    const [salesRes, coursesRes, calendarRes] = await Promise.all([
       supabase.from('sales').select('*, payments(*)'),
       supabase.from('courses').select('*'),
-      supabase.from('calendar').select('*'),
-      supabase.from('users').select('*')
+      supabase.from('calendar').select('*')
     ]);
     
     _salesCache = salesRes.data || [];
