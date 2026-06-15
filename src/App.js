@@ -71,13 +71,6 @@ const AppLayout = ({ children }) => {
     } catch (e) {
       console.error('Error during payment migration', e);
     }
-    
-    // Migrate to Supabase if needed
-    import('./utils/storage').then(({ needsMigration, migrateLocalStorageToBackend }) => {
-      if (needsMigration()) {
-        migrateLocalStorageToBackend().then(res => console.log('Supabase Migration:', res.message));
-      }
-    });
   }, []);
 
   return (

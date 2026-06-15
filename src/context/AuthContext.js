@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { setCurrentUser, getCurrentUser, clearCurrentUser, preloadData } from '../utils/storage';
+import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, preloadData } from '../utils/storage';
 import { logoutUser as logoutWP } from '../services/authService';
 
 const AuthContext = createContext(null);
@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const loadApp = async () => {
-
+      initializeData();
 
       const savedUser = getCurrentUser();
       if (savedUser) {
