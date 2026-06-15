@@ -43,7 +43,7 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
     icon: ICONS[0],
     academicHours: '120 horas académicas',
     descriptionText: 'Por haber aprobado satisfactoriamente el curso.',
-    cpanelFolder: localStorage.getItem('lastCpanelFolder') || CPANEL_FOLDERS[0]
+    cpanelFolder: CPANEL_FOLDERS[0]
   });
   const [errors, setErrors] = useState({});
 
@@ -58,7 +58,7 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
         icon: courseToEdit.icon || ICONS[0],
         academicHours: courseToEdit.academicHours || '120 horas académicas',
         descriptionText: courseToEdit.descriptionText || 'Por haber aprobado satisfactoriamente el curso.',
-        cpanelFolder: courseToEdit.cpanelFolder || localStorage.getItem('lastCpanelFolder') || CPANEL_FOLDERS[0]
+        cpanelFolder: courseToEdit.cpanelFolder || CPANEL_FOLDERS[0]
       });
     }
   }, [courseToEdit]);
@@ -88,11 +88,6 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
       updateCourse(courseToEdit.id, courseData);
     } else {
       addCourse(courseData);
-    }
-    
-    // Save the selected folder to localStorage
-    if (formData.cpanelFolder) {
-      localStorage.setItem('lastCpanelFolder', formData.cpanelFolder);
     }
     
     onSave();
@@ -231,7 +226,7 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
                     <option key={folder} value={folder}>{folder}</option>
                   ))}
                 </select>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>El valor seleccionado se guardará para la próxima vez.</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Esta carpeta se asociará individualmente a este curso.</span>
               </div>
             </div>
           </div>
