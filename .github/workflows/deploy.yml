@@ -21,7 +21,10 @@ jobs:
       - name: 📦 Instalar dependencias
         run: npm install
 
-      - name: 🏗️ Construir el proyecto
+      - name: 📦 Construir el proyecto
+        env:
+          REACT_APP_SUPABASE_URL: ${{ secrets.REACT_APP_SUPABASE_URL }}
+          REACT_APP_SUPABASE_ANON_KEY: ${{ secrets.REACT_APP_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - name: 🚀 Subir a cPanel por SFTP
