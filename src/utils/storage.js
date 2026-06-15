@@ -26,7 +26,6 @@ export function clearCurrentUser() {
 let _salesCache = null;
 let _coursesCache = null;
 let _calendarCache = null;
-let _usersCache = null;
 
 export async function preloadData() {
   try {
