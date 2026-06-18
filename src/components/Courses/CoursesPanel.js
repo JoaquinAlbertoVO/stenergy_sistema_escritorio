@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCourses, deleteCourse, getCalendarData } from '../../utils/storage';
+import { getCourses, deleteCourse, getCalendarData, syncCoursesWithWP } from '../../utils/storage';
 import CourseFormModal from './CourseFormModal';
 import './Courses.css';
 
@@ -9,6 +9,7 @@ function CoursesPanel() {
   const [editingCourse, setEditingCourse] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedMonths, setExpandedMonths] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Auto-expand the most recent month initially
   useEffect(() => {
@@ -88,10 +89,27 @@ function CoursesPanel() {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este curso? Esto no eliminará las ventas ni certificados ya generados con él, pero ya no aparecerá en el listado para crear nuevas ventas.')) {
-      deleteCourse(id);
+      await deleteCourse(id);
       loadCourses();
+    }
+  };
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await syncCoursesWithWP();
+      if (res.success) {
+        alert(`Sincronización exitosa:\n${res.added} cursos nuevos añadidos\n${res.updated} cursos actualizados`);
+        loadCourses();
+      } else {
+        alert("Error al sincronizar: " + (res.error || "Desconocido"));
+      }
+    } catch (err) {
+      alert("Error de conexión al sincronizar.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -104,13 +122,23 @@ function CoursesPanel() {
             Crea o edita los cursos y configura su información para los certificados.
           </p>
         </div>
-        <button className="btn-primary" onClick={handleAdd}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18" style={{ marginRight: '8px' }}>
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Nuevo Curso
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            className="btn-primary" 
+            onClick={handleSync}
+            disabled={isSyncing}
+            style={{ backgroundColor: '#2196F3', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            {isSyncing ? 'Sincronizando...' : '🔄 Sincronizar WP'}
+          </button>
+          <button className="btn-primary" onClick={handleAdd} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nuevo Curso
+          </button>
+        </div>
       </div>
 
       <div className="search-container" style={{ marginBottom: '24px', position: 'relative', maxWidth: '400px' }}>

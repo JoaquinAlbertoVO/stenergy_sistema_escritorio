@@ -130,6 +130,12 @@ export async function deleteCourse(id) {
   await invalidateCache('courses');
 }
 
+export async function syncCoursesWithWP() {
+  const result = await apiFetch('/api/wp/sync-courses', { method: 'POST' });
+  await invalidateCache('courses');
+  return result;
+}
+
 // ============================================
 // Calendar
 // ============================================
