@@ -79,8 +79,9 @@ function SalesPanel() {
       'DNI': sale.clientDni,
       'Curso': sale.courseName,
       'Modalidad': sale.modality,
-      'Total (S/)': sale.totalAmount,
-      'Pagado (S/)': sale.paidAmount || 0,
+      'Moneda': sale.certificateOverrides?.currency === 'USD' ? 'USD' : 'PEN',
+      'Total': sale.totalAmount,
+      'Pagado': sale.paidAmount || 0,
       'Estado': sale.status
     })));
     const workbook = XLSX.utils.book_new();
@@ -128,6 +129,31 @@ function SalesPanel() {
     }
   };
 
+  // Calculate metrics split by currency
+  const metrics = React.useMemo(() => {
+    let totalPEN = 0;
+    let totalUSD = 0;
+    let debtPEN = 0;
+    let debtUSD = 0;
+
+    filteredSales.forEach(s => {
+      const isUSD = s.certificateOverrides?.currency === 'USD';
+      const amount = s.totalAmount || 0;
+      const paid = s.paidAmount || 0;
+      const debt = Math.max(0, amount - paid);
+
+      if (isUSD) {
+        totalUSD += paid;
+        debtUSD += debt;
+      } else {
+        totalPEN += paid;
+        debtPEN += debt;
+      }
+    });
+
+    return { totalPEN, totalUSD, debtPEN, debtUSD };
+  }, [filteredSales]);
+
   return (
     <div className="sales-panel">
       <div className="dashboard-metrics-grid">
@@ -137,15 +163,17 @@ function SalesPanel() {
         </SpotlightCard>
         <SpotlightCard className="metric-card" spotlightColor="rgba(0, 229, 255, 0.15)">
           <h3 style={{ color: '#00E5FF' }}>Ingresos Totales</h3>
-          <p className="metric-value">S/ <CountUp from={0} to={Math.round(filteredSales.reduce((sum, s) => sum + (s.paidAmount || 0), 0))} duration={1.5} separator="," /></p>
+          <p className="metric-value" style={{ fontSize: '1.2rem' }}>
+            S/ <CountUp from={0} to={Math.round(metrics.totalPEN)} duration={1.5} separator="," />
+            {metrics.totalUSD > 0 && <span> | $ <CountUp from={0} to={Math.round(metrics.totalUSD)} duration={1.5} separator="," /></span>}
+          </p>
         </SpotlightCard>
         <SpotlightCard className="metric-card" spotlightColor="rgba(255, 71, 87, 0.15)">
           <h3 style={{ color: '#ff4757' }}>Deuda Pendiente</h3>
-          <p className="metric-value">S/ <CountUp from={0} to={Math.round(filteredSales.reduce((sum, s) => {
-            const amount = s.totalAmount || 0;
-            const paid = s.paidAmount || 0;
-            return sum + Math.max(0, amount - paid);
-          }, 0))} duration={1.5} separator="," /></p>
+          <p className="metric-value" style={{ fontSize: '1.2rem' }}>
+            S/ <CountUp from={0} to={Math.round(metrics.debtPEN)} duration={1.5} separator="," />
+            {metrics.debtUSD > 0 && <span> | $ <CountUp from={0} to={Math.round(metrics.debtUSD)} duration={1.5} separator="," /></span>}
+          </p>
         </SpotlightCard>
       </div>
 
@@ -295,10 +323,10 @@ function SalesPanel() {
                     {sale.modality === 'virtual' ? '💻 Virtual' : '🏫 Semipresencial'}
                   </span>
                 </td>
-                <td className="td-amount">S/ {sale.totalAmount}</td>
-                <td className="td-amount td-paid">S/ {sale.paidAmount}</td>
+                <td className="td-amount">{sale.certificateOverrides?.currency === 'USD' ? '$' : 'S/'} {sale.totalAmount}</td>
+                <td className="td-amount td-paid">{sale.certificateOverrides?.currency === 'USD' ? '$' : 'S/'} {sale.paidAmount}</td>
                 <td className="td-amount td-debt">
-                  {sale.totalAmount - sale.paidAmount > 0 ? `S/ ${sale.totalAmount - sale.paidAmount}` : '-'}
+                  {sale.totalAmount - sale.paidAmount > 0 ? `${sale.certificateOverrides?.currency === 'USD' ? '$' : 'S/'} ${sale.totalAmount - sale.paidAmount}` : '-'}
                 </td>
                 <td>
                   <span className={`status-badge status-${sale.status}`}>

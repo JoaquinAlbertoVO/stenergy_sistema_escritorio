@@ -16,7 +16,8 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
     modality: saleToEdit?.modality || 'semipresencial',
     paymentType: saleToEdit ? (saleToEdit.totalAmount === saleToEdit.paidAmount ? 'completo' : 'deuda') : 'completo',
     paymentAccount: saleToEdit?.payments?.[0]?.account || 'BCP',
-    paymentDate: saleToEdit?.date || new Date().toISOString().split('T')[0]
+    paymentDate: saleToEdit?.date || new Date().toISOString().split('T')[0],
+    currency: saleToEdit?.certificateOverrides?.currency || 'PEN'
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,9 +25,30 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
   const coursesList = getCourses();
   const allSales = getSales();
   
-  // Filter courses to only show those scheduled in the calendar
   const calendarEntries = getCalendarData();
-  const scheduledCourseIds = new Set(calendarEntries.map(e => e.courseId));
+  const availableMonths = React.useMemo(() => {
+    const months = new Set();
+    calendarEntries.forEach(e => {
+      if (e.startDate) months.add(e.startDate.substring(0, 7)); // YYYY-MM
+    });
+    return Array.from(months).sort().reverse();
+  }, [calendarEntries]);
+
+  const currentMonthStr = new Date().toISOString().substring(0, 7);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    if (saleToEdit && saleToEdit.courseId) {
+      const entry = calendarEntries.find(e => e.courseId === saleToEdit.courseId);
+      if (entry && entry.startDate) return entry.startDate.substring(0, 7);
+    }
+    return availableMonths.includes(currentMonthStr) ? currentMonthStr : (availableMonths[0] || '');
+  });
+
+  // Filter courses to only show those scheduled in the selected month
+  const scheduledCourseIds = new Set(
+    calendarEntries
+      .filter(e => e.startDate && e.startDate.startsWith(selectedMonth))
+      .map(e => e.courseId)
+  );
   const availableCourses = coursesList.filter(c => scheduledCourseIds.has(c.id));
 
   const handleChange = (e) => {
@@ -137,6 +159,10 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
         status,
         certificateGenerated: saleToEdit ? saleToEdit.certificateGenerated : false,
         modality: formData.modality,
+        certificateOverrides: { 
+          ...(saleToEdit?.certificateOverrides || {}),
+          currency: formData.currency 
+        },
         sellerId: saleToEdit ? saleToEdit.sellerId : user.id,
         sellerName: saleToEdit ? saleToEdit.sellerName : user.name,
         date: saleToEdit ? saleToEdit.date : new Date().toISOString().split('T')[0]
@@ -243,13 +269,29 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
           <div className="form-section">
             <h3 className="form-section-title">Detalle de Venta</h3>
             <div className="form-grid">
+              <div className="form-group form-group-full">
+                <label>Mes de Inicio</label>
+                <select value={selectedMonth} onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setFormData(prev => ({ ...prev, courseId: '', totalAmount: '', paidAmount: '' }));
+                }}>
+                  {availableMonths.map(monthStr => {
+                    const [year, month] = monthStr.split('-');
+                    const date = new Date(year, parseInt(month) - 1);
+                    const label = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+                    return <option key={monthStr} value={monthStr}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
+                  })}
+                  {availableMonths.length === 0 && <option value="">No hay meses disponibles</option>}
+                </select>
+              </div>
               <div className={`form-group form-group-full ${errors.courseId ? 'error' : ''}`}>
                 <label>Curso</label>
                 <select name="courseId" value={formData.courseId} onChange={handleChange}>
                   <option value="">Seleccionar curso...</option>
                   {availableCourses.map(c => (
-                    <option key={c.id} value={c.id}>{c.icon} {c.name} - S/ {c.price}</option>
+                    <option key={c.id} value={c.id}>{c.icon} {c.name} - {formData.currency === 'USD' ? '$' : 'S/'} {c.price}</option>
                   ))}
+                  {availableCourses.length === 0 && selectedMonth && <option value="" disabled>No hay cursos este mes</option>}
                 </select>
                 {errors.courseId && <span className="form-error">{errors.courseId}</span>}
               </div>
@@ -261,8 +303,15 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
                 </select>
                 {errors.modality && <span className="form-error">{errors.modality}</span>}
               </div>
+              <div className="form-group">
+                <label>Moneda</label>
+                <select name="currency" value={formData.currency} onChange={handleChange}>
+                  <option value="PEN">Soles (S/)</option>
+                  <option value="USD">Dólares ($)</option>
+                </select>
+              </div>
               <div className={`form-group ${errors.totalAmount ? 'error' : ''}`}>
-                <label>Monto Total (S/)</label>
+                <label>Monto Total ({formData.currency === 'USD' ? '$' : 'S/'})</label>
                 <input
                   type="number"
                   name="totalAmount"
@@ -282,7 +331,7 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
                 </select>
               </div>
               <div className={`form-group ${errors.paidAmount ? 'error' : ''}`}>
-                <label>Monto Pagado Inicial (S/)</label>
+                <label>Monto Pagado Inicial ({formData.currency === 'USD' ? '$' : 'S/'})</label>
                 <input
                   type="number"
                   name="paidAmount"
@@ -324,16 +373,16 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
               <div className="form-summary">
                 <div className="summary-item">
                   <span>Total:</span>
-                  <strong>S/ {Number(formData.totalAmount).toLocaleString()}</strong>
+                  <strong>{formData.currency === 'USD' ? '$' : 'S/'} {Number(formData.totalAmount).toLocaleString()}</strong>
                 </div>
                 <div className="summary-item">
                   <span>Pagado:</span>
-                  <strong className="text-success">S/ {(Number(formData.paidAmount) || 0).toLocaleString()}</strong>
+                  <strong className="text-success">{formData.currency === 'USD' ? '$' : 'S/'} {(Number(formData.paidAmount) || 0).toLocaleString()}</strong>
                 </div>
                 <div className="summary-item">
                   <span>Deuda:</span>
                   <strong className={debt > 0 ? 'text-danger' : 'text-success'}>
-                    S/ {Math.max(0, debt).toLocaleString()}
+                    {formData.currency === 'USD' ? '$' : 'S/'} {Math.max(0, debt).toLocaleString()}
                   </strong>
                 </div>
               </div>
