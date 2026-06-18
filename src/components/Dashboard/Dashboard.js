@@ -14,6 +14,7 @@ function Dashboard() {
   
   // Filters state
   const [dateFilter, setDateFilter] = useState('all');
+  const [exactDateFilter, setExactDateFilter] = useState('');
   const [courseFilter, setCourseFilter] = useState('all');
   const [sellerFilter, setSellerFilter] = useState('all');
   const [filteredSales, setFilteredSales] = useState([]);
@@ -49,7 +50,7 @@ function Dashboard() {
       const currentYear = now.getFullYear();
 
       filtered = filtered.filter(s => {
-        const d = new Date(s.date);
+        const d = new Date(s.date + 'T12:00:00');
         if (dateFilter === 'thisMonth') {
           return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
         } else if (dateFilter === 'lastMonth') {
@@ -63,6 +64,11 @@ function Dashboard() {
         }
         return true;
       });
+    }
+
+    // 1.5 Filter by Exact Date
+    if (exactDateFilter) {
+      filtered = filtered.filter(s => s.date === exactDateFilter);
     }
 
     // 2. Filter by Course
@@ -121,7 +127,7 @@ function Dashboard() {
     };
 
     requestAnimationFrame(animate);
-  }, [allSalesData, dateFilter, courseFilter, sellerFilter, isAdmin]);
+  }, [allSalesData, dateFilter, exactDateFilter, courseFilter, sellerFilter, isAdmin]);
 
   if (!stats) return null;
 
@@ -258,12 +264,20 @@ function Dashboard() {
           <select 
             className="filter-select" 
             value={dateFilter} 
-            onChange={(e) => setDateFilter(e.target.value)}
+            onChange={(e) => { setDateFilter(e.target.value); setExactDateFilter(''); }}
           >
             <option value="all">Todos los Tiempos</option>
             <option value="thisMonth">Este Mes</option>
             <option value="lastMonth">Mes Pasado</option>
           </select>
+
+          <input
+            type="date"
+            className="filter-input-date"
+            value={exactDateFilter}
+            onChange={(e) => { setExactDateFilter(e.target.value); if(e.target.value) setDateFilter('all'); }}
+            style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+          />
 
           <select 
             className="filter-select" 

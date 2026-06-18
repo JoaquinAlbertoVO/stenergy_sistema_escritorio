@@ -39,6 +39,7 @@ function SalesPanel() {
   const [filterCourse, setFilterCourse] = useState('all');
   const [filterModality, setFilterModality] = useState('all');
   const [filterMonth, setFilterMonth] = useState('all');
+  const [filterExactDate, setFilterExactDate] = useState('');
   const [filterAccount, setFilterAccount] = useState('all');
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -74,7 +75,7 @@ function SalesPanel() {
 
   const handleExportExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredSales.map(sale => ({
-      'Fecha': new Date(sale.date).toLocaleDateString('es-PE'),
+      'Fecha': sale.date ? new Date(sale.date + 'T12:00:00').toLocaleDateString('es-PE') : '-',
       'Cliente': sale.clientName,
       'DNI': sale.clientDni,
       'Curso': sale.courseName,
@@ -115,9 +116,10 @@ function SalesPanel() {
     const matchesCourse = filterCourse === 'all' || sale.courseId === filterCourse;
     const matchesModality = filterModality === 'all' || sale.modality === filterModality;
     const matchesMonth = filterMonth === 'all' || (sale.date && sale.date.startsWith(filterMonth));
+    const matchesExactDate = !filterExactDate || sale.date === filterExactDate;
     const matchesAccount = filterAccount === 'all' || (sale.payments && sale.payments.some(p => p.account === filterAccount));
     
-    return matchesSearch && matchesStatus && matchesCourse && matchesModality && matchesMonth && matchesAccount;
+    return matchesSearch && matchesStatus && matchesCourse && matchesModality && matchesMonth && matchesExactDate && matchesAccount;
   });
 
   const getStatusLabel = (status) => {
@@ -227,7 +229,7 @@ function SalesPanel() {
             <select
               className="filter-select"
               value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
+              onChange={(e) => { setFilterMonth(e.target.value); setFilterExactDate(''); }}
             >
               <option value="all">Todos los meses</option>
               {availableMonths.map(monthStr => {
@@ -237,6 +239,14 @@ function SalesPanel() {
                 return <option key={monthStr} value={monthStr}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
               })}
             </select>
+
+            <input
+              type="date"
+              className="filter-input-date"
+              value={filterExactDate}
+              onChange={(e) => { setFilterExactDate(e.target.value); if(e.target.value) setFilterMonth('all'); }}
+              style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+            />
 
             <select
               className="filter-select"
@@ -301,7 +311,7 @@ function SalesPanel() {
             {filteredSales.map((sale, index) => (
               <tr key={sale.id} style={{ animationDelay: `${index * 0.03}s` }}>
                 <td className="td-date">
-                  {new Date(sale.date).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}
+                  {sale.date ? new Date(sale.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }) : '-'}
                 </td>
                 <td>
                   <div className="td-client">
