@@ -69,7 +69,33 @@ const COURSES = [
     duration: '5 semanas',
     price: 480,
     color: '#f59e0b',
-    icon: '☀️'
+  },
+  {
+    id: '3534',
+    name: 'Curso Práctico de Terminaciones en Media Tensión -17/06/26',
+    shortName: 'Terminaciones MT',
+    duration: '120 horas',
+    price: 350,
+    color: '#ff6b35',
+    icon: '⚡'
+  },
+  {
+    id: '3229',
+    name: 'Curso Especialización en Electricidad Industrial -Virtual-01/06/26',
+    shortName: 'Electricidad Ind.',
+    duration: '120 horas',
+    price: 400,
+    color: '#00d4aa',
+    icon: '🔧'
+  },
+  {
+    id: '3492',
+    name: 'Curso Práctico de Analizador de Redes – Semipresencial – 15/06/26',
+    shortName: 'Analizador Redes',
+    duration: '120 horas',
+    price: 380,
+    color: '#7c5cfc',
+    icon: '📊'
   }
 ];
 
