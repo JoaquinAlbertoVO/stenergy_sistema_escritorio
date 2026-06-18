@@ -21,6 +21,7 @@ function CoursesPanel() {
         setExpandedMonths(['Otros']);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courses]);
 
   const getCourseMonth = (course, calendarEntries) => {
@@ -30,6 +31,7 @@ function CoursesPanel() {
     }
     
     // Try to extract date from name (DD/MM/YY or DD/MM/YYYY)
+    // eslint-disable-next-line no-useless-escape
     const dateMatch = course.name.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
     if (dateMatch) {
       let year = dateMatch[3];
