@@ -361,6 +361,54 @@ def wp_enroll(data: dict):
         print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
+@app.post("/api/wp/sync-courses")
+def sync_wp_courses(db: Session = Depends(get_db)):
+    try:
+        import html
+        resp = requests.get("https://stenergyedu.com/wp-json/wp/v2/courses?per_page=100")
+        if resp.status_code != 200:
+            return JSONResponse(status_code=500, content={"success": False, "error": "No se pudo conectar con WordPress"})
+            
+        wp_courses = resp.json()
+        local_courses = db.query(models.Course).all()
+        local_ids = {c.id: c for c in local_courses}
+        
+        added = 0
+        updated = 0
+        
+        for wc in wp_courses:
+            c_id = str(wc["id"])
+            c_name = html.unescape(wc.get("title", {}).get("rendered", ""))
+            
+            if c_id in local_ids:
+                local_c = local_ids[c_id]
+                if local_c.name != c_name:
+                    local_c.name = c_name
+                    updated += 1
+            else:
+                new_course = models.Course(
+                    id=c_id,
+                    name=c_name,
+                    shortName=c_name[:20],
+                    courseCode="",
+                    price=0.0,
+                    color="#cccccc",
+                    icon="📚",
+                    academicHours="120 horas",
+                    descriptionText="Participó y aprobó satisfactoriamente el curso.",
+                    cpanelFolder=""
+                )
+                db.add(new_course)
+                added += 1
+                
+        db.commit()
+        return {"success": True, "added": added, "updated": updated}
+        
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
 # ---- Migrate Data Endpoint ----
 @app.post("/api/migrate")
 def migrate_data(data: dict, db: Session = Depends(get_db)):
