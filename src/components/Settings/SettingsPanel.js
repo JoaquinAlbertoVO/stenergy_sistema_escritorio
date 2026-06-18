@@ -119,7 +119,7 @@ function SettingsPanel() {
                 <span className="setting-desc">Descarga o visualiza la guía de uso</span>
               </div>
               <a 
-                href={`${process.env.PUBLIC_URL}/manual.pdf`} 
+                href={`${process.env.PUBLIC_URL}/MANUAL_SISTEMA_STENERGY.pdf`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn-primary"
