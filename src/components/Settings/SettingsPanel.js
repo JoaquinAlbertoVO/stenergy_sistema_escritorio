@@ -113,6 +113,27 @@ function SettingsPanel() {
               <span className="version-badge">v1.0.0 (Estable)</span>
             </div>
 
+            <div className="setting-row">
+              <div className="setting-info">
+                <span className="setting-label">Manual de Usuario</span>
+                <span className="setting-desc">Descarga o visualiza la guía de uso</span>
+              </div>
+              <a 
+                href={`${process.env.PUBLIC_URL}/manual.pdf`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn-primary"
+                style={{ textDecoration: 'none', fontSize: '0.85rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Descargar PDF
+              </a>
+            </div>
+
             <div className="setting-row" style={{ marginTop: 'auto' }}>
               <div className="setting-info">
                 <span className="setting-label">Desarrollo Web</span>
