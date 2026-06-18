@@ -404,6 +404,21 @@ def delete_calendar_entry(entry_id: str, db: Session = Depends(get_db)):
     return {"success": True}
 
 # ---- Sales ----
+@app.get("/api/sales/debug")
+def debug_sales(db: Session = Depends(get_db)):
+    import traceback
+    try:
+        sales = db.query(models.Sale).all()
+        # let's try to convert each sale to pydantic manually to see which one fails
+        for s in sales:
+            try:
+                schemas.Sale.from_orm(s)
+            except Exception as pe:
+                return {"error": "Pydantic error on sale " + str(s.id), "trace": str(pe)}
+        return {"count": len(sales)}
+    except Exception as e:
+        return {"error": str(e), "trace": traceback.format_exc()}
+
 @app.get("/api/sales", response_model=list[schemas.Sale])
 def read_sales(db: Session = Depends(get_db)):
     return crud.get_sales(db)
