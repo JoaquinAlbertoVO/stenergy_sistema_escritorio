@@ -404,6 +404,17 @@ def delete_calendar_entry(entry_id: str, db: Session = Depends(get_db)):
     return {"success": True}
 
 # ---- Sales ----
+@app.get("/api/sales/fix")
+def fix_sales(db: Session = Depends(get_db)):
+    sales = db.query(models.Sale).filter((models.Sale.totalAmount == None) | (models.Sale.paidAmount == None)).all()
+    count = 0
+    for s in sales:
+        if s.totalAmount is None: s.totalAmount = 0.0
+        if s.paidAmount is None: s.paidAmount = 0.0
+        count += 1
+    db.commit()
+    return {"fixed": count}
+
 @app.get("/api/sales/debug")
 def debug_sales(db: Session = Depends(get_db)):
     import traceback
