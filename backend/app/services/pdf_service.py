@@ -97,6 +97,11 @@ def generate_certificate_pdf(
     c.drawCentredString(970, 530, dni)
 
     # Texto descriptivo debajo del DNI
+    # Reemplazamos el espacio normal por un espacio sin salto (non-breaking space)
+    # para evitar que "ST ENERGY" se separe en dos líneas distintas.
+    description_text = description_text.replace("ST ENERGY", "ST\xa0ENERGY")
+    description_text = description_text.replace("ST Energy", "ST\xa0Energy")
+    
     draw_centered_paragraph(
         c,
         text=description_text,
