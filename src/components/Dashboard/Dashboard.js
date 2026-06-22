@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getSales, getCourses } from '../../utils/storage';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -231,22 +231,7 @@ function Dashboard() {
       ingresos: salesByDate[date]
     }));
 
-  // Prepare PieChart data (Sales by Course)
-  const salesByCourse = {};
-  filteredSales.forEach(sale => {
-    const cName = sale.courseName || 'Sin Asignar';
-    if (!salesByCourse[cName]) {
-      salesByCourse[cName] = 0;
-    }
-    salesByCourse[cName] += sale.paidAmount;
-  });
-  
-  const pieData = Object.keys(salesByCourse).map(name => ({
-    name: name,
-    value: salesByCourse[name]
-  })).sort((a,b) => b.value - a.value).slice(0, 5); // top 5 courses
 
-  const PIE_COLORS = ['#00d4aa', '#ffba0d', '#7c5cfc', '#ff4757', '#1e90ff'];
 
   return (
     <div className="dashboard">
@@ -349,42 +334,6 @@ function Dashboard() {
                   />
                   <Line type="monotone" dataKey="ingresos" stroke="#00d4aa" strokeWidth={3} dot={{ r: 4, fill: '#00d4aa', strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} />
                 </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="empty-state-mini" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p>No hay datos suficientes</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h3>Top Ingresos por Curso</h3>
-          </div>
-          <div style={{ width: '100%', height: 300, marginTop: '20px' }}>
-            {pieData.length > 0 ? (
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={70}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip 
-                    contentStyle={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-color)', borderRadius: '8px', color: '#fff' }}
-                    formatter={(value) => `S/ ${value}`}
-                  />
-                </PieChart>
               </ResponsiveContainer>
             ) : (
               <div className="empty-state-mini" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
