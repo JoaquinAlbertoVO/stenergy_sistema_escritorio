@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
@@ -6,7 +6,20 @@ import './Sidebar.css';
 function Sidebar() {
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const handleToggle = () => setMobileOpen(prev => !prev);
+    document.addEventListener('toggleMobileMenu', handleToggle);
+    return () => document.removeEventListener('toggleMobileMenu', handleToggle);
+  }, []);
+
+  const handleLinkClick = () => {
+    if (window.innerWidth <= 768) {
+      setMobileOpen(false);
+    }
+  };
 
   const navItems = [
     {
@@ -118,7 +131,9 @@ function Sidebar() {
   const roleBadge = getRoleBadge(user?.role);
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+    <>
+      <div className={`mobile-overlay ${mobileOpen ? 'visible' : ''}`} onClick={() => setMobileOpen(false)} />
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-brand">
           <div className="sidebar-logo">
@@ -154,6 +169,7 @@ function Sidebar() {
             end={item.path === '/'}
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             title={collapsed ? item.label : ''}
+            onClick={handleLinkClick}
           >
             <span className="sidebar-link-icon">{item.icon}</span>
             {!collapsed && <span className="sidebar-link-label">{item.label}</span>}
@@ -180,6 +196,7 @@ function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }
 

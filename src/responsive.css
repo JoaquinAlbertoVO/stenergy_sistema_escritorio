@@ -1,0 +1,124 @@
+/* responsive.css */
+@media (max-width: 1024px) {
+  /* Modals */
+  .modal-content {
+    width: 95% !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+  }
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* Courses Grid */
+  .courses-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Sidebar */
+  .sidebar {
+    position: fixed !important;
+    left: -260px;
+    z-index: 1000 !important;
+    transition: left 0.3s ease;
+  }
+  .sidebar.mobile-open {
+    left: 0 !important;
+  }
+
+  /* Header */
+  .header-date {
+    display: none !important; /* Hide long date on mobile */
+  }
+  
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Hamburger button inside header */
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+
+  /* Tables */
+  .table-container, .panel-table-wrapper, .debts-table-container, .payments-table-container {
+    overflow-x: auto !important;
+    width: 100%;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .panel-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+  
+  .toolbar-left, .toolbar-right {
+    flex-direction: column !important;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100% !important;
+  }
+  
+  .btn-primary, .btn-secondary, .btn-export {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Dashboard Cards */
+  .dashboard-stats {
+    grid-template-columns: 1fr !important;
+  }
+  .charts-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Courses Grid */
+  .courses-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .calendar-layout {
+    flex-direction: column !important;
+  }
+  
+  .calendar-sidebar {
+    width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border-color);
+  }
+}
+
+/* Hide hamburger on desktop */
+.mobile-menu-btn {
+  display: none;
+}
+
+/* Mobile Sidebar Overlay */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+.mobile-overlay.visible {
+  display: block;
+}
