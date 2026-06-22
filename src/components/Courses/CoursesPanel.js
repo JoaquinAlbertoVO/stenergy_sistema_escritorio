@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCourses, deleteCourse, getCalendarData, syncCoursesWithWP } from '../../utils/storage';
 import CourseFormModal from './CourseFormModal';
-import SearchInput from '../SearchInput';
 import './Courses.css';
 
 function CoursesPanel() {
@@ -143,11 +142,18 @@ function CoursesPanel() {
       </div>
 
       <div style={{ marginBottom: '24px' }}>
-        <SearchInput 
-          placeholder="Buscar curso por nombre o sigla..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="search-wrapper" style={{ maxWidth: '400px' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input 
+            type="text" 
+            placeholder="Buscar curso por nombre o sigla..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
 
       <div className="courses-accordion">

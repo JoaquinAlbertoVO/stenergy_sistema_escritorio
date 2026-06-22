@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getSales, getCourses } from '../../utils/storage';
-import SearchInput from '../SearchInput';
 import './Payments.css';
 
 function PaymentsPanel() {
@@ -172,11 +171,18 @@ function PaymentsPanel() {
 
       <div className="panel-toolbar">
         <div className="toolbar-left">
-          <SearchInput
-            placeholder="Buscar por cliente, DNI, teléfono..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="search-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input 
+              type="text" 
+              placeholder="Buscar por cliente, DNI, teléfono..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
           <select
             className="filter-select"
