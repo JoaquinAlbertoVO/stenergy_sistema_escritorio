@@ -5,7 +5,6 @@ const SearchInput = ({ placeholder = "Search...", value, onChange }) => {
   return (
     <StyledWrapper>
       <div className="search-container">
-        <div className="grid" />
         <div id="poda">
           <div className="glow" />
           <div className="darkBorderBg" />
@@ -63,18 +62,7 @@ const StyledWrapper = styled.div`
     z-index: 1;
   }
 
-  .grid {
-    height: 800px;
-    width: 800px;
-    background-image: linear-gradient(to right, #0f0f10 1px, transparent 1px),
-      linear-gradient(to bottom, #0f0f10 1px, transparent 1px);
-    background-size: 1rem 1rem;
-    background-position: center center;
-    position: absolute;
-    z-index: -1;
-    filter: blur(1px);
-    pointer-events: none;
-  }
+
   .white,
   .border,
   .darkBorderBg,
