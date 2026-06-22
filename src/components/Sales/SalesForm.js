@@ -233,8 +233,7 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
                   name="clientDni"
                   value={formData.clientDni}
                   onChange={handleChange}
-                  placeholder="12345678"
-                  maxLength="8"
+                  placeholder="DNI, CE o Pasaporte"
                 />
                 <div className="form-feedback">
                   {errors.clientDni ? <span className="form-error">{errors.clientDni}</span> : null}
