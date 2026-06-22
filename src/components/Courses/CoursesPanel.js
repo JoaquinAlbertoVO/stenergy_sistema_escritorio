@@ -212,8 +212,12 @@ function CoursesPanel() {
                       {monthCourses.map(course => (
                         <div key={course.id} className="course-card">
                           <div className="course-card-header">
-                            <div className="course-icon" style={{ color: course.color }}>
-                              {course.icon}
+                            <div className="course-icon" style={{ color: course.color, overflow: 'hidden', padding: course.icon?.startsWith('http') ? '0' : undefined }}>
+                              {course.icon?.startsWith('http') ? (
+                                <img src={course.icon} alt="icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                course.icon
+                              )}
                             </div>
                             <div className="course-titles">
                               <h3 className="course-name">{course.name}</h3>

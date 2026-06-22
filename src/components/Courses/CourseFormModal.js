@@ -167,19 +167,20 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
             
             <div className="form-grid" style={{ marginTop: '16px' }}>
               <div className="form-group">
-                <label>Ícono</label>
-                <div className="color-picker-grid">
-                  {ICONS.map(icon => (
-                    <div 
-                      key={icon}
-                      className={`color-swatch ${formData.icon === icon ? 'selected' : ''}`}
-                      onClick={() => setFormData({...formData, icon})}
-                      style={{ background: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}
-                    >
-                      {icon}
-                    </div>
-                  ))}
-                </div>
+                <label>Ícono o URL de Imagen</label>
+                <input
+                  type="text"
+                  name="icon"
+                  value={formData.icon}
+                  onChange={e => setFormData({...formData, icon: e.target.value})}
+                  className="form-control"
+                  placeholder="Ej: ⚡ o https://misitio.com/foto.jpg"
+                />
+                {formData.icon.startsWith('http') && (
+                  <div style={{ marginTop: '10px' }}>
+                    <img src={formData.icon} alt="Preview" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label>Color Identificador</label>
