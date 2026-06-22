@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSales, getCourses } from '../../utils/storage';
 import CertificateEditModal from './CertificateEditModal';
+import SearchInput from '../SearchInput';
 import './Certificates.css';
 
 function CertificatesPanel() {
@@ -66,18 +67,11 @@ function CertificatesPanel() {
 
       <div className="panel-toolbar">
         <div className="toolbar-left">
-          <div className="search-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Buscar por alumno o DNI..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <SearchInput
+            placeholder="Buscar por alumno o DNI..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
 
           <select
             className="filter-select"

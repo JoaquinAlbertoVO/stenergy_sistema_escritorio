@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getSales, getCourses, deleteSale } from '../../utils/storage';
 import SalesForm from './SalesForm';
 import PaymentHistoryModal from './PaymentHistoryModal';
+import SearchInput from '../SearchInput';
 import CountUp from '../ui/CountUp/CountUp';
 import ElectricBorder from '../ui/ElectricBorder/ElectricBorder';
 import SpotlightCard from '../ui/SpotlightCard/SpotlightCard';
@@ -181,18 +182,11 @@ function SalesPanel() {
 
       <div className="panel-toolbar" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
         <div className="toolbar-top-row" style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-          <div className="search-wrapper" style={{ flex: 1, minWidth: '220px', maxWidth: '400px' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Buscar cliente o DNI..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <SearchInput
+            placeholder="Buscar cliente o DNI..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <button className="btn-secondary btn-export-excel" onClick={handleExportExcel} style={{ whiteSpace: 'nowrap', borderColor: 'rgba(0, 212, 170, 0.4)', color: '#00d4aa' }}>
