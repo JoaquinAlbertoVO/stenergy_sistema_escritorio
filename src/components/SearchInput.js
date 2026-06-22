@@ -22,8 +22,6 @@ const SearchInput = ({ placeholder = "Search...", value, onChange }) => {
               value={value}
               onChange={onChange}
             />
-            <div id="input-mask" />
-            <div id="pink-mask" />
             <div className="filterBorder" />
             <div id="filter-icon">
               <svg preserveAspectRatio="none" height={27} width={27} viewBox="4.8 4.56 14.832 15.408" fill="none">
@@ -36,12 +34,12 @@ const SearchInput = ({ placeholder = "Search...", value, onChange }) => {
                 <line stroke="url(#searchl)" y2="16.65" y1={22} x2="16.65" x1={22} />
                 <defs>
                   <linearGradient gradientTransform="rotate(50)" id="search">
-                    <stop stopColor="#f8e7f8" offset="0%" />
-                    <stop stopColor="#b6a9b7" offset="50%" />
+                    <stop stopColor="#b3ffef" offset="0%" />
+                    <stop stopColor="#00d4aa" offset="50%" />
                   </linearGradient>
                   <linearGradient id="searchl">
-                    <stop stopColor="#b6a9b7" offset="0%" />
-                    <stop stopColor="#837484" offset="50%" />
+                    <stop stopColor="#00d4aa" offset="0%" />
+                    <stop stopColor="#00997a" offset="50%" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -117,37 +115,6 @@ const StyledWrapper = styled.div`
     outline: none;
   }
 
-  #main:focus-within > #input-mask {
-    display: none;
-  }
-
-  #input-mask {
-    pointer-events: none;
-    width: 100px;
-    height: 20px;
-    position: absolute;
-    background: linear-gradient(90deg, transparent, black);
-    top: 18px;
-    left: 70px;
-  }
-  #pink-mask {
-    pointer-events: none;
-    width: 30px;
-    height: 20px;
-    position: absolute;
-    background: #cf30aa;
-    top: 10px;
-    left: 5px;
-    filter: blur(20px);
-    opacity: 0.8;
-    //animation:leftright 4s ease-in infinite;
-    transition: all 2s;
-  }
-  #main:hover > #pink-mask {
-    //animation: rotate 4s linear infinite;
-    opacity: 0;
-  }
-
   .white {
     max-height: 63px;
     max-width: 307px;
@@ -170,10 +137,10 @@ const StyledWrapper = styled.div`
     filter: brightness(1.4);
     background-image: conic-gradient(
       rgba(0, 0, 0, 0) 0%,
-      #a099d8,
+      #00d4aa,
       rgba(0, 0, 0, 0) 8%,
       rgba(0, 0, 0, 0) 50%,
-      #dfa2da,
+      #ffba0d,
       rgba(0, 0, 0, 0) 58%
     );
     //  animation: rotate 4s linear infinite;
@@ -200,10 +167,10 @@ const StyledWrapper = styled.div`
     background-position: 0 0;
     background-image: conic-gradient(
       #1c191c,
-      #402fb5 5%,
+      #00d4aa 5%,
       #1c191c 14%,
       #1c191c 50%,
-      #cf30aa 60%,
+      #ffba0d 60%,
       #1c191c 64%
     );
     // animation: rotate 4s 0.1s linear infinite;
@@ -227,10 +194,10 @@ const StyledWrapper = styled.div`
     background-position: 0 0;
     background-image: conic-gradient(
       rgba(0, 0, 0, 0),
-      #18116a,
+      #004d3e,
       rgba(0, 0, 0, 0) 10%,
       rgba(0, 0, 0, 0) 50%,
-      #6e1b60,
+      #664a05,
       rgba(0, 0, 0, 0) 60%
     );
     transition: all 2s;
@@ -300,10 +267,10 @@ const StyledWrapper = styled.div`
     /*border color, change middle color*/
     background-image: conic-gradient(
       #000,
-      #402fb5 5%,
+      #00d4aa 5%,
       #000 38%,
       #000 50%,
-      #cf30aa 60%,
+      #ffba0d 60%,
       #000 87%
     );
     /* change speed here */
