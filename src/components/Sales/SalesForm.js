@@ -200,12 +200,6 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
         else if (paid > 0) status = 'parcial';
 
         const course = coursesList.find(c => c.id === block.courseId);
-        
-        const initialPayment = paid > 0 ? [{
-          date: block.paymentDate,
-          amount: paid,
-          account: block.paymentAccount
-        }] : [];
 
         const updatedSale = {
           clientName: clientData.clientName.trim(),
