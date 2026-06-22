@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { addSale, updateSale, getCourses, getCalendarData, getSales } from '../../utils/storage';
 import { enrollStudent } from '../../services/courseService';
+import Loader from '../Loader';
 
 function SalesForm({ saleToEdit, onClose, onSave }) {
   const { user } = useAuth();
@@ -289,8 +290,10 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '800px' }}>
+    <>
+      {isSubmitting && <Loader />}
+      <div className="modal-overlay">
+        <div className="modal-content" style={{ maxWidth: '800px' }}>
         <div className="modal-header">
           <h2>{saleToEdit ? 'Editar Venta' : 'Registrar Nueva Venta'}</h2>
           <button className="modal-close" onClick={onClose}>
@@ -514,6 +517,7 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
         </form>
       </div>
     </div>
+    </>
   );
 }
 

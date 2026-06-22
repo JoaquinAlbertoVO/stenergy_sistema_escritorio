@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { addCourse, updateCourse, getCalendarData, addCalendarEntry, updateCalendarEntry } from '../../utils/storage';
+import Loader from '../Loader';
 
 const COLORS = [
   '#ff6b35', '#00d4aa', '#7c5cfc', '#ff4757', 
@@ -169,8 +170,10 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
+    <>
+      {isSubmitting && <Loader />}
+      <div className="modal-overlay">
+        <div className="modal-content">
         <div className="modal-header">
           <h2>{courseToEdit ? 'Editar Curso' : 'Nuevo Curso'}</h2>
           <button className="modal-close" onClick={onClose}>
@@ -352,6 +355,7 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
         </form>
       </div>
     </div>
+    </>
   );
 }
 

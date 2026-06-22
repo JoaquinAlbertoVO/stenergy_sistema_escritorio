@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import './Login.css';
 import Aurora from '../ui/Aurora/Aurora';
 import BlurText from '../ui/BlurText/BlurText';
+import Loader from '../Loader';
 
 function Login() {
   const { login } = useAuth();
@@ -27,8 +28,10 @@ function Login() {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-bg-effects" style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
+    <>
+      {isLoading && <Loader />}
+      <div className="login-page">
+        <div className="login-bg-effects" style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
         <Aurora colorStops={['#121212', '#332303', '#111111']} blend={0.8} amplitude={1.0} />
       </div>
 
@@ -145,6 +148,7 @@ function Login() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
