@@ -125,7 +125,7 @@ function Login() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="login-spinner"></div>
+                'Cargando...'
               ) : (
                 <>
                   Iniciar Sesión

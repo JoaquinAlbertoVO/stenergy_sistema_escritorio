@@ -294,18 +294,7 @@
   transform: translateX(4px);
 }
 
-.login-spinner {
-  width: 22px;
-  height: 22px;
-  border: 2.5px solid rgba(0,0,0,0.2);
-  border-top-color: #000;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
 
 .login-footer {
   margin-top: 32px;

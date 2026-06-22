@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { setCurrentUser, getCurrentUser, clearCurrentUser, initializeData, preloadData } from '../utils/storage';
 import { logoutUser as logoutWP } from '../services/authService';
+import Loader from '../components/Loader';
 
 const AuthContext = createContext(null);
 
@@ -70,11 +71,7 @@ export function AuthProvider({ children }) {
   const isAsesor = () => user?.role === 'asesor1' || user?.role === 'asesor2';
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0a0a0f' }}>
-        <div className="loader"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

@@ -5,7 +5,7 @@ const Loader = () => {
   return (
     <StyledWrapper>
       <div>
-        <div className="loader">
+        <div className="ship-loader">
           <span><span /><span /><span /><span /></span>
           <div className="base">
             <span />
@@ -32,14 +32,14 @@ const StyledWrapper = styled.div`
   align-items: center;
   justify-content: center;
 
-  .loader {
+  .ship-loader {
     position: absolute;
     top: 50%;
     margin-left: -50px;
     left: 50%;
     animation: speeder 0.4s linear infinite;
   }
-  .loader > span {
+  .ship-loader > span {
     height: 5px;
     width: 35px;
     background: #00d4aa;
@@ -99,26 +99,26 @@ const StyledWrapper = styled.div`
     transform-origin: 50% 50%;
     border-radius: 0 0 0 2px;
   }
-  .loader > span > span:nth-child(1),
-  .loader > span > span:nth-child(2),
-  .loader > span > span:nth-child(3),
-  .loader > span > span:nth-child(4) {
+  .ship-loader > span > span:nth-child(1),
+  .ship-loader > span > span:nth-child(2),
+  .ship-loader > span > span:nth-child(3),
+  .ship-loader > span > span:nth-child(4) {
     width: 30px;
     height: 1px;
     background: #00d4aa;
     position: absolute;
     animation: fazer1 0.2s linear infinite;
   }
-  .loader > span > span:nth-child(2) {
+  .ship-loader > span > span:nth-child(2) {
     top: 3px;
     animation: fazer2 0.4s linear infinite;
   }
-  .loader > span > span:nth-child(3) {
+  .ship-loader > span > span:nth-child(3) {
     top: 1px;
     animation: fazer3 0.4s linear infinite;
     animation-delay: -1s;
   }
-  .loader > span > span:nth-child(4) {
+  .ship-loader > span > span:nth-child(4) {
     top: 4px;
     animation: fazer4 1s linear infinite;
     animation-delay: -1s;
