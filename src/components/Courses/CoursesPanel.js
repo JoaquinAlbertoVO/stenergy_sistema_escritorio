@@ -210,20 +210,24 @@ function CoursesPanel() {
                   <div className="accordion-content" style={{ padding: '20px', borderTop: '1px solid var(--border-color)' }}>
                     <div className="courses-grid">
                       {monthCourses.map(course => (
-                        <div key={course.id} className="course-card">
-                          <div className="course-card-header">
-                            <div className="course-icon" style={{ color: course.color, overflow: 'hidden', padding: course.icon?.startsWith('http') ? '0' : undefined }}>
-                              {course.icon?.startsWith('http') ? (
-                                <img src={course.icon} alt="icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : (
-                                course.icon
+                        <div key={course.id} className="course-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                          {course.icon?.startsWith('http') && (
+                            <div style={{ width: '100%', height: '150px' }}>
+                              <img src={course.icon} alt={course.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+                          )}
+                          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                            <div className="course-card-header">
+                              {!course.icon?.startsWith('http') && (
+                                <div className="course-icon" style={{ color: course.color }}>
+                                  {course.icon}
+                                </div>
                               )}
+                              <div className="course-titles">
+                                <h3 className="course-name">{course.name}</h3>
+                                <div className="course-short-name" style={{ color: course.color }}>{course.shortName}</div>
+                              </div>
                             </div>
-                            <div className="course-titles">
-                              <h3 className="course-name">{course.name}</h3>
-                              <div className="course-short-name" style={{ color: course.color }}>{course.shortName}</div>
-                            </div>
-                          </div>
 
                           <div className="course-price">
                             S/ {course.price}
@@ -253,6 +257,7 @@ function CoursesPanel() {
                             >
                               Eliminar
                             </button>
+                          </div>
                           </div>
                         </div>
                       ))}

@@ -288,7 +288,9 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
                 <select name="courseId" value={formData.courseId} onChange={handleChange}>
                   <option value="">Seleccionar curso...</option>
                   {availableCourses.map(c => (
-                    <option key={c.id} value={c.id}>{c.icon} {c.name} - {formData.currency === 'USD' ? '$' : 'S/'} {c.price}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.icon && !c.icon.startsWith('http') ? c.icon + ' ' : ''}{c.name} - {formData.currency === 'USD' ? '$' : 'S/'} {c.price}
+                    </option>
                   ))}
                   {availableCourses.length === 0 && selectedMonth && <option value="" disabled>No hay cursos este mes</option>}
                 </select>
