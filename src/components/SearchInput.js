@@ -51,7 +51,8 @@ const SearchInput = ({ placeholder = "Search...", value, onChange }) => {
 }
 
 const StyledWrapper = styled.div`
-  display: inline-block;
+  display: block;
+  width: 100%;
   position: relative;
   
   .search-container {
@@ -60,6 +61,7 @@ const StyledWrapper = styled.div`
     align-items: center;
     justify-content: center;
     z-index: 1;
+    width: 100%;
   }
 
 
@@ -67,36 +69,35 @@ const StyledWrapper = styled.div`
   .border,
   .darkBorderBg,
   .glow {
-    max-height: 70px;
-    max-width: 314px;
     height: 100%;
     width: 100%;
     position: absolute;
     overflow: hidden;
     z-index: -1;
-    /* Border Radius */
-    border-radius: 12px;
+    border-radius: 10px;
     filter: blur(3px);
   }
   .input {
-    background-color: #010201;
+    background-color: var(--bg-card, #0f0f19);
     border: none;
-    /* padding:7px; */
-    width: 301px;
-    height: 56px;
+    width: 100%;
+    height: 44px;
     border-radius: 10px;
-    color: white;
-    padding-inline: 59px;
-    font-size: 18px;
+    color: var(--text-primary, white);
+    padding: 10px 44px 10px 40px;
+    font-size: 0.85rem;
+    font-family: inherit;
     box-sizing: border-box;
   }
   #poda {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    position: relative;
   }
   .input::placeholder {
-    color: #c0b9c0;
+    color: var(--text-muted, #c0b9c0);
   }
 
   .input:focus {
@@ -104,8 +105,6 @@ const StyledWrapper = styled.div`
   }
 
   .white {
-    max-height: 63px;
-    max-width: 307px;
     border-radius: 10px;
     filter: blur(2px);
   }
@@ -135,9 +134,7 @@ const StyledWrapper = styled.div`
     transition: all 2s;
   }
   .border {
-    max-height: 59px;
-    max-width: 303px;
-    border-radius: 11px;
+    border-radius: 10px;
     filter: blur(0.5px);
   }
   .border::before {
@@ -165,8 +162,6 @@ const StyledWrapper = styled.div`
     transition: all 2s;
   }
   .darkBorderBg {
-    max-height: 65px;
-    max-width: 312px;
   }
   .darkBorderBg::before {
     content: "";
@@ -237,8 +232,7 @@ const StyledWrapper = styled.div`
     overflow: hidden;
     filter: blur(30px);
     opacity: 0.4;
-    max-height: 130px;
-    max-width: 354px;
+    transform: scale(1.15);
   }
   .glow:before {
     content: "";
@@ -294,32 +288,34 @@ const StyledWrapper = styled.div`
 
   #filter-icon {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 6px;
+    right: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2;
-    max-height: 40px;
-    max-width: 38px;
-    height: 100%;
-    width: 100%;
+    height: 32px;
+    width: 32px;
 
     isolation: isolate;
     overflow: hidden;
     /* Border Radius */
-    border-radius: 10px;
+    border-radius: 8px;
     background: linear-gradient(180deg, #161329, black, #1d1b4b);
     border: 1px solid transparent;
   }
+  #filter-icon svg {
+    width: 18px;
+    height: 18px;
+  }
   .filterBorder {
-    height: 42px;
-    width: 40px;
+    height: 34px;
+    width: 34px;
     position: absolute;
     overflow: hidden;
-    top: 7px;
-    right: 7px;
-    border-radius: 10px;
+    top: 5px;
+    right: 5px;
+    border-radius: 8px;
   }
 
   .filterBorder::before {
@@ -347,11 +343,20 @@ const StyledWrapper = styled.div`
   }
   #main {
     position: relative;
+    width: 100%;
   }
   #search-icon {
     position: absolute;
-    left: 20px;
-    top: 15px;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #search-icon svg {
+    width: 16px;
+    height: 16px;
   }
 `;
 
