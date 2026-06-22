@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { addCourse, updateCourse } from '../../utils/storage';
+import { addCourse, updateCourse, getCalendarData, addCalendarEntry, updateCalendarEntry } from '../../utils/storage';
 
 const COLORS = [
   '#ff6b35', '#00d4aa', '#7c5cfc', '#ff4757', 
@@ -46,6 +46,9 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
     descriptionText: 'Por haber aprobado satisfactoriamente el curso.',
     cpanelFolder: CPANEL_FOLDERS[0]
   });
+  const [calDates, setCalDates] = useState({ startDate: '', endDate: '', daysOfWeek: [] });
+  const [calEntryId, setCalEntryId] = useState(null);
+  
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,8 +65,36 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
         descriptionText: courseToEdit.descriptionText || 'Por haber aprobado satisfactoriamente el curso.',
         cpanelFolder: courseToEdit.cpanelFolder || CPANEL_FOLDERS[0]
       });
+
+      const calendar = getCalendarData();
+      const entry = calendar.find(e => e.courseId === courseToEdit.id);
+      if (entry) {
+        setCalEntryId(entry.id);
+        let days = [];
+        if (entry.selectedDates && entry.selectedDates.length > 0) {
+          const uniqueDays = new Set();
+          entry.selectedDates.forEach(ds => {
+            const d = new Date(ds + 'T00:00:00');
+            uniqueDays.add(d.getDay());
+          });
+          days = Array.from(uniqueDays);
+        }
+        setCalDates({
+          startDate: entry.startDate || '',
+          endDate: entry.endDate || '',
+          daysOfWeek: days
+        });
+      }
     }
   }, [courseToEdit]);
+
+  const toggleDayOfWeek = (dayId) => {
+    setCalDates(prev => {
+      const days = [...prev.daysOfWeek];
+      if (days.includes(dayId)) return { ...prev, daysOfWeek: days.filter(d => d !== dayId) };
+      return { ...prev, daysOfWeek: [...days, dayId] };
+    });
+  };
 
   const validate = () => {
     const newErrors = {};
@@ -90,8 +121,43 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
 
       if (courseToEdit) {
         await updateCourse(courseToEdit.id, courseData);
+        courseData.id = courseToEdit.id;
       } else {
         await addCourse(courseData);
+      }
+      
+      if (calDates.startDate && calDates.endDate) {
+        const selectedDates = [];
+        let current = new Date(calDates.startDate + 'T00:00:00');
+        const end = new Date(calDates.endDate + 'T00:00:00');
+        
+        while (current <= end) {
+          if (calDates.daysOfWeek.length === 0 || calDates.daysOfWeek.includes(current.getDay())) {
+            selectedDates.push(current.toISOString().split('T')[0]);
+          }
+          current.setDate(current.getDate() + 1);
+        }
+
+        const calPayload = {
+          courseId: courseData.id,
+          courseName: courseData.name,
+          startDate: calDates.startDate,
+          endDate: calDates.endDate,
+          selectedDates: selectedDates.length > 0 ? selectedDates : null,
+          color: courseData.color
+        };
+
+        if (calEntryId) {
+          await updateCalendarEntry(calEntryId, calPayload);
+        } else {
+          const calendar = getCalendarData();
+          const existing = calendar.find(e => e.courseId === courseData.id);
+          if (existing) {
+             await updateCalendarEntry(existing.id, calPayload);
+          } else {
+             await addCalendarEntry(calPayload);
+          }
+        }
       }
       
       onSave();
@@ -238,6 +304,42 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
                 </select>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Esta carpeta se asociará individualmente a este curso.</span>
               </div>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h3 className="form-section-title">Programación (Calendario y Certificados)</h3>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Fecha de Inicio</label>
+                <input type="date" value={calDates.startDate} onChange={e => setCalDates({...calDates, startDate: e.target.value})} className="form-control" />
+              </div>
+              <div className="form-group">
+                <label>Fecha de Fin</label>
+                <input type="date" value={calDates.endDate} onChange={e => setCalDates({...calDates, endDate: e.target.value})} className="form-control" />
+              </div>
+            </div>
+            <div className="form-group" style={{ marginTop: '12px' }}>
+              <label>Días de clase en este rango</label>
+              <div className="days-checkbox-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                {[{id: 1, label: 'L'}, {id: 2, label: 'M'}, {id: 3, label: 'X'}, {id: 4, label: 'J'}, {id: 5, label: 'V'}, {id: 6, label: 'S'}, {id: 0, label: 'D'}].map(day => (
+                  <button
+                    key={day.id}
+                    type="button"
+                    onClick={() => toggleDayOfWeek(day.id)}
+                    style={{
+                      width: '32px', height: '32px', borderRadius: '50%',
+                      border: '1px solid var(--border-color)', 
+                      background: calDates.daysOfWeek.includes(day.id) ? 'var(--color-primary)' : 'var(--bg-card)',
+                      color: calDates.daysOfWeek.includes(day.id) ? '#000' : 'var(--text-secondary)',
+                      cursor: 'pointer', fontWeight: 'bold'
+                    }}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+              <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>Si no marcas ningún día, se asignarán todos los días entre la fecha de inicio y fin.</small>
             </div>
           </div>
 
