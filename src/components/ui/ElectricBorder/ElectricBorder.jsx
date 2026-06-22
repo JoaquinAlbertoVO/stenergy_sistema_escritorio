@@ -6,6 +6,8 @@ const ElectricBorder = ({
   color = '#5227FF',
   speed = 1,
   chaos = 0.12,
+  displacement = 25,
+  borderOffset = 30,
   borderRadius = 24,
   className,
   style
@@ -151,8 +153,7 @@ const ElectricBorder = ({
     const amplitude = chaos;
     const frequency = 10;
     const baseFlatness = 0;
-    const displacement = 60;
-    const borderOffset = 60;
+    // displacement and borderOffset are now props
 
     const updateSize = () => {
       const rect = container.getBoundingClientRect();
@@ -272,7 +273,7 @@ const ElectricBorder = ({
       }
       resizeObserver.disconnect();
     };
-  }, [color, speed, chaos, borderRadius, octavedNoise, getRoundedRectPoint]);
+  }, [color, speed, chaos, displacement, borderOffset, borderRadius, octavedNoise, getRoundedRectPoint]);
 
   const vars = {
     '--electric-border-color': color,
