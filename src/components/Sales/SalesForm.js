@@ -284,16 +284,19 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
                 </select>
               </div>
               <div className={`form-group form-group-full ${errors.courseId ? 'error' : ''}`}>
-                <label>Curso</label>
-                <select name="courseId" value={formData.courseId} onChange={handleChange}>
-                  <option value="">Seleccionar curso...</option>
-                  {availableCourses.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.icon && !c.icon.startsWith('http') ? c.icon + ' ' : ''}{c.name} - {formData.currency === 'USD' ? '$' : 'S/'} {c.price}
-                    </option>
-                  ))}
-                  {availableCourses.length === 0 && selectedMonth && <option value="" disabled>No hay cursos este mes</option>}
-                </select>
+                  <label>Curso</label>
+                  <select name="courseId" value={formData.courseId} onChange={handleChange}>
+                    <option value="">Seleccionar curso...</option>
+                    {availableCourses.map(c => {
+                      const isUrl = c.icon && (c.icon.includes('http') || c.icon.includes('www'));
+                      return (
+                        <option key={c.id} value={c.id}>
+                          {c.icon && !isUrl ? c.icon.trim() + ' ' : ''}{c.name} - {formData.currency === 'USD' ? '$' : 'S/'} {c.price}
+                        </option>
+                      );
+                    })}
+                    {availableCourses.length === 0 && selectedMonth && <option value="" disabled>No hay cursos este mes</option>}
+                  </select>
                 {errors.courseId && <span className="form-error">{errors.courseId}</span>}
               </div>
               <div className={`form-group ${errors.modality ? 'error' : ''}`}>
