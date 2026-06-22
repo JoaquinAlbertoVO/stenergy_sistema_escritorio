@@ -5,27 +5,11 @@ import { enrollStudent } from '../../services/courseService';
 
 function SalesForm({ saleToEdit, onClose, onSave }) {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    clientName: saleToEdit?.clientName || '',
-    clientDni: saleToEdit?.clientDni || '',
-    clientPhone: saleToEdit?.clientPhone || '',
-    clientEmail: saleToEdit?.clientEmail || '',
-    courseId: saleToEdit?.courseId || '',
-    totalAmount: saleToEdit?.totalAmount?.toString() || '',
-    paidAmount: saleToEdit?.paidAmount?.toString() || '',
-    modality: saleToEdit?.modality || 'semipresencial',
-    paymentType: saleToEdit ? (saleToEdit.totalAmount === saleToEdit.paidAmount ? 'completo' : 'deuda') : 'completo',
-    paymentAccount: saleToEdit?.payments?.[0]?.account || 'BCP',
-    paymentDate: saleToEdit?.date || new Date().toISOString().split('T')[0],
-    currency: saleToEdit?.certificateOverrides?.currency || 'PEN'
-  });
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dniAutoFilled, setDniAutoFilled] = useState(false);
+  
   const coursesList = getCourses();
   const allSales = getSales();
-  
   const calendarEntries = getCalendarData();
+  
   const availableMonths = React.useMemo(() => {
     const months = new Set();
     calendarEntries.forEach(e => {
@@ -35,29 +19,58 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
   }, [calendarEntries]);
 
   const currentMonthStr = new Date().toISOString().substring(0, 7);
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    if (saleToEdit && saleToEdit.courseId) {
-      const entry = calendarEntries.find(e => e.courseId === saleToEdit.courseId);
+  const getInitialMonth = (cId) => {
+    if (cId) {
+      const entry = calendarEntries.find(e => e.courseId === cId);
       if (entry && entry.startDate) return entry.startDate.substring(0, 7);
     }
     return availableMonths.includes(currentMonthStr) ? currentMonthStr : (availableMonths[0] || '');
+  };
+
+  const createEmptyCourseBlock = () => ({
+    courseId: '',
+    totalAmount: '',
+    paidAmount: '',
+    modality: 'semipresencial',
+    paymentType: 'completo',
+    paymentAccount: 'PICHINCHA',
+    paymentDate: new Date().toISOString().split('T')[0],
+    currency: 'PEN',
+    selectedMonth: getInitialMonth(null)
   });
 
-  // Filter courses to only show those scheduled in the selected month
-  const scheduledCourseIds = new Set(
-    calendarEntries
-      .filter(e => e.startDate && e.startDate.startsWith(selectedMonth))
-      .map(e => e.courseId)
-  );
-  const availableCourses = coursesList.filter(c => scheduledCourseIds.has(c.id));
+  const [clientData, setClientData] = useState({
+    clientName: saleToEdit?.clientName || '',
+    clientDni: saleToEdit?.clientDni || '',
+    clientPhone: saleToEdit?.clientPhone || '',
+    clientEmail: saleToEdit?.clientEmail || '',
+  });
 
-  const handleChange = (e) => {
+  const [courseBlocks, setCourseBlocks] = useState(() => {
+    if (saleToEdit) {
+      return [{
+        courseId: saleToEdit.courseId || '',
+        totalAmount: saleToEdit.totalAmount?.toString() || '',
+        paidAmount: saleToEdit.paidAmount?.toString() || '',
+        modality: saleToEdit.modality || 'semipresencial',
+        paymentType: saleToEdit.totalAmount === saleToEdit.paidAmount ? 'completo' : 'deuda',
+        paymentAccount: saleToEdit.payments?.[0]?.account || 'PICHINCHA',
+        paymentDate: saleToEdit.date || new Date().toISOString().split('T')[0],
+        currency: saleToEdit.certificateOverrides?.currency || 'PEN',
+        selectedMonth: getInitialMonth(saleToEdit.courseId)
+      }];
+    }
+    return [createEmptyCourseBlock()];
+  });
+
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dniAutoFilled, setDniAutoFilled] = useState(false);
+
+  const handleClientChange = (e) => {
     const { name, value } = e.target;
-    
-    setFormData(prev => {
+    setClientData(prev => {
       const newData = { ...prev, [name]: value };
-      
-      // 🔍 Auto-completar datos del cliente cuando el DNI coincide con una venta existente
       if (name === 'clientDni' && value.trim().length >= 7 && !saleToEdit) {
         const existingSale = allSales.find(s => s.clientDni === value.trim());
         if (existingSale) {
@@ -71,54 +84,100 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
       } else if (name === 'clientDni') {
         setDniAutoFilled(false);
       }
+      return newData;
+    });
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+  };
 
-      // Auto-fill price when course is selected
+  const handleCourseChange = (index, e) => {
+    const { name, value } = e.target;
+    
+    setCourseBlocks(prev => {
+      const newBlocks = [...prev];
+      const block = { ...newBlocks[index] };
+      block[name] = value;
+
+      if (name === 'selectedMonth') {
+        block.courseId = '';
+        block.totalAmount = '';
+        block.paidAmount = '';
+      }
+
       if (name === 'courseId') {
+        const scheduledCourseIds = new Set(
+          calendarEntries.filter(entry => entry.startDate && entry.startDate.startsWith(block.selectedMonth)).map(entry => entry.courseId)
+        );
+        const availableCourses = coursesList.filter(c => scheduledCourseIds.has(c.id));
         const course = availableCourses.find(c => c.id === value);
         if (course) {
-          newData.totalAmount = course.price.toString();
-          if (newData.paymentType === 'completo') {
-            newData.paidAmount = course.price.toString();
+          block.totalAmount = course.price.toString();
+          if (block.paymentType === 'completo') {
+            block.paidAmount = course.price.toString();
           }
         }
       }
-      
+
       if (name === 'paymentType') {
         if (value === 'completo') {
-          newData.paidAmount = newData.totalAmount;
+          block.paidAmount = block.totalAmount;
         } else {
-          newData.paidAmount = ''; // Clear for partial payment
+          block.paidAmount = '';
         }
       }
-      
-      return newData;
+
+      newBlocks[index] = block;
+      return newBlocks;
     });
 
-    // Clear error
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    const errorKey = `${name}_${index}`;
+    if (errors[errorKey]) {
+      setErrors(prev => ({ ...prev, [errorKey]: '' }));
     }
+    if (name === 'courseId' && errors.duplicate) {
+      setErrors(prev => ({ ...prev, duplicate: '' }));
+    }
+  };
+
+  const addCourseBlock = () => {
+    setCourseBlocks(prev => [...prev, createEmptyCourseBlock()]);
+  };
+
+  const removeCourseBlock = (index) => {
+    setCourseBlocks(prev => prev.filter((_, i) => i !== index));
   };
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.clientName.trim()) newErrors.clientName = 'Nombre requerido';
-    if (!formData.clientDni.trim()) newErrors.clientDni = 'DNI requerido';
-    if (!formData.clientPhone.trim()) newErrors.clientPhone = 'Teléfono requerido';
-    if (!formData.clientEmail.trim()) newErrors.clientEmail = 'Email requerido';
-    if (!formData.courseId) newErrors.courseId = 'Selecciona un curso';
-    if (!formData.totalAmount || isNaN(formData.totalAmount)) newErrors.totalAmount = 'Monto inválido';
-    if (formData.paidAmount && isNaN(formData.paidAmount)) newErrors.paidAmount = 'Monto inválido';
-    if (Number(formData.paidAmount) > Number(formData.totalAmount)) newErrors.paidAmount = 'No puede ser mayor al total';
-    if (!formData.modality) newErrors.modality = 'Selecciona una modalidad';
+    if (!clientData.clientName.trim()) newErrors.clientName = 'Nombre requerido';
+    if (!clientData.clientDni.trim()) newErrors.clientDni = 'DNI requerido';
+    if (!clientData.clientPhone.trim()) newErrors.clientPhone = 'Teléfono requerido';
+    if (!clientData.clientEmail.trim()) newErrors.clientEmail = 'Email requerido';
 
-    // 🚫 Validar duplicado: mismo DNI + mismo curso (solo al crear, no al editar)
-    if (!saleToEdit && formData.clientDni.trim() && formData.courseId) {
-      const duplicate = allSales.find(
-        s => s.clientDni === formData.clientDni.trim() && s.courseId === formData.courseId
-      );
-      if (duplicate) {
-        newErrors.courseId = `Este alumno (DNI: ${formData.clientDni}) ya está inscrito en este curso`;
+    courseBlocks.forEach((block, index) => {
+      if (!block.courseId) newErrors[`courseId_${index}`] = 'Selecciona un curso';
+      if (!block.totalAmount || isNaN(block.totalAmount)) newErrors[`totalAmount_${index}`] = 'Monto inválido';
+      if (block.paidAmount && isNaN(block.paidAmount)) newErrors[`paidAmount_${index}`] = 'Monto inválido';
+      if (Number(block.paidAmount) > Number(block.totalAmount)) newErrors[`paidAmount_${index}`] = 'No puede ser mayor al total';
+      if (!block.modality) newErrors[`modality_${index}`] = 'Selecciona una modalidad';
+    });
+
+    if (!saleToEdit && clientData.clientDni.trim()) {
+      const selectedCourses = courseBlocks.map(b => b.courseId).filter(Boolean);
+      
+      const duplicateInForm = selectedCourses.filter((item, index) => selectedCourses.indexOf(item) !== index);
+      if (duplicateInForm.length > 0) {
+        newErrors.duplicate = 'Has seleccionado el mismo curso más de una vez';
+      }
+
+      for (const block of courseBlocks) {
+        if (block.courseId) {
+          const duplicate = allSales.find(
+            s => s.clientDni === clientData.clientDni.trim() && s.courseId === block.courseId
+          );
+          if (duplicate) {
+            newErrors.duplicate = `Este alumno (DNI: ${clientData.clientDni}) ya está inscrito en uno de los cursos seleccionados`;
+          }
+        }
       }
     }
     
@@ -132,75 +191,112 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
 
     setIsSubmitting(true);
     try {
-      const paid = Number(formData.paidAmount) || 0;
-      const total = Number(formData.totalAmount);
-      let status = 'pendiente';
-      if (paid >= total) status = 'pagado';
-      else if (paid > 0) status = 'parcial';
-
-      const course = availableCourses.find(c => c.id === formData.courseId);
-
-      const initialPayment = paid > 0 ? [{
-        date: formData.paymentDate,
-        amount: paid,
-        account: formData.paymentAccount
-      }] : [];
-
-      const sale = {
-        clientName: formData.clientName.trim(),
-        clientDni: formData.clientDni.trim(),
-        clientPhone: formData.clientPhone.trim(),
-        clientEmail: formData.clientEmail.trim(),
-        courseId: formData.courseId,
-        courseName: course?.name || '',
-        totalAmount: total,
-        paidAmount: paid,
-        payments: saleToEdit ? saleToEdit.payments : initialPayment,
-        status,
-        certificateGenerated: saleToEdit ? saleToEdit.certificateGenerated : false,
-        modality: formData.modality,
-        certificateOverrides: { 
-          ...(saleToEdit?.certificateOverrides || {}),
-          currency: formData.currency 
-        },
-        sellerId: saleToEdit ? saleToEdit.sellerId : user.id,
-        sellerName: saleToEdit ? saleToEdit.sellerName : user.name,
-        date: saleToEdit ? saleToEdit.date : new Date().toISOString().split('T')[0]
-      };
-
       if (saleToEdit) {
-        // Editar venta existente
-        await updateSale(saleToEdit.id, sale);
+        const block = courseBlocks[0];
+        const paid = Number(block.paidAmount) || 0;
+        const total = Number(block.totalAmount);
+        let status = 'pendiente';
+        if (paid >= total) status = 'pagado';
+        else if (paid > 0) status = 'parcial';
+
+        const course = coursesList.find(c => c.id === block.courseId);
+        
+        const initialPayment = paid > 0 ? [{
+          date: block.paymentDate,
+          amount: paid,
+          account: block.paymentAccount
+        }] : [];
+
+        const updatedSale = {
+          clientName: clientData.clientName.trim(),
+          clientDni: clientData.clientDni.trim(),
+          clientPhone: clientData.clientPhone.trim(),
+          clientEmail: clientData.clientEmail.trim(),
+          courseId: block.courseId,
+          courseName: course?.name || '',
+          totalAmount: total,
+          paidAmount: paid,
+          payments: saleToEdit.payments, // Keep existing on edit
+          status,
+          certificateGenerated: saleToEdit.certificateGenerated,
+          modality: block.modality,
+          certificateOverrides: { 
+            ...(saleToEdit.certificateOverrides || {}),
+            currency: block.currency 
+          },
+          sellerId: saleToEdit.sellerId,
+          sellerName: saleToEdit.sellerName,
+          date: saleToEdit.date
+        };
+
+        await updateSale(saleToEdit.id, updatedSale);
         alert("¡Cambios guardados con éxito!");
       } else {
-        // Guardar nueva venta localmente
-        await addSale(sale);
+        let allSuccess = true;
+        let wpErrorMsg = '';
 
-        // Intentar inscribir en WordPress/TutorLMS usando el servicio solo en creación
-        const wpResult = await enrollStudent(sale.clientEmail, sale.clientName, sale.courseId, sale.clientDni);
-        
-        if (!wpResult.success) {
-          alert(`Venta registrada localmente, PERO hubo un problema inscribiendo en WordPress: ${wpResult.error}`);
+        for (const block of courseBlocks) {
+          const paid = Number(block.paidAmount) || 0;
+          const total = Number(block.totalAmount);
+          let status = 'pendiente';
+          if (paid >= total) status = 'pagado';
+          else if (paid > 0) status = 'parcial';
+
+          const course = coursesList.find(c => c.id === block.courseId);
+
+          const initialPayment = paid > 0 ? [{
+            date: block.paymentDate,
+            amount: paid,
+            account: block.paymentAccount
+          }] : [];
+
+          const newSale = {
+            clientName: clientData.clientName.trim(),
+            clientDni: clientData.clientDni.trim(),
+            clientPhone: clientData.clientPhone.trim(),
+            clientEmail: clientData.clientEmail.trim(),
+            courseId: block.courseId,
+            courseName: course?.name || '',
+            totalAmount: total,
+            paidAmount: paid,
+            payments: initialPayment,
+            status,
+            certificateGenerated: false,
+            modality: block.modality,
+            certificateOverrides: { currency: block.currency },
+            sellerId: user.id,
+            sellerName: user.name,
+            date: new Date().toISOString().split('T')[0]
+          };
+
+          await addSale(newSale);
+          
+          const wpResult = await enrollStudent(newSale.clientEmail, newSale.clientName, newSale.courseId, newSale.clientDni);
+          if (!wpResult.success) {
+            allSuccess = false;
+            wpErrorMsg += `${course?.name}: ${wpResult.error}\n`;
+          }
+        }
+
+        if (allSuccess) {
+          alert(`¡${courseBlocks.length > 1 ? 'Ventas registradas e inscripciones' : 'Venta registrada e inscripción'} en WordPress con éxito!`);
         } else {
-          alert("¡Venta registrada e inscrita en WordPress con éxito!");
-          console.log('Inscripción exitosa en WP:', wpResult.data);
+          alert(`Ventas guardadas localmente. Hubo problemas con WordPress:\n${wpErrorMsg}`);
         }
       }
 
       onSave();
     } catch (error) {
       console.error("Error al guardar la venta:", error);
-      alert("Ocurrió un error al guardar la venta. Revisa tu conexión o intenta nuevamente.");
+      alert("Ocurrió un error al guardar. Revisa tu conexión o intenta nuevamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const debt = (Number(formData.totalAmount) || 0) - (Number(formData.paidAmount) || 0);
-
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div className="modal-content" style={{ maxWidth: '800px' }}>
         <div className="modal-header">
           <h2>{saleToEdit ? 'Editar Venta' : 'Registrar Nueva Venta'}</h2>
           <button className="modal-close" onClick={onClose}>
@@ -217,24 +313,12 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
             <div className="form-grid">
               <div className={`form-group ${errors.clientName ? 'error' : ''}`}>
                 <label>Nombre completo</label>
-                <input
-                  type="text"
-                  name="clientName"
-                  value={formData.clientName}
-                  onChange={handleChange}
-                  placeholder="Ej: Juan Pérez García"
-                />
+                <input type="text" name="clientName" value={clientData.clientName} onChange={handleClientChange} placeholder="Ej: Juan Pérez García" />
                 {errors.clientName && <span className="form-error">{errors.clientName}</span>}
               </div>
               <div className={`form-group ${errors.clientDni ? 'error' : ''}`}>
                 <label>DNI</label>
-                <input
-                  type="text"
-                  name="clientDni"
-                  value={formData.clientDni}
-                  onChange={handleChange}
-                  placeholder="DNI, CE o Pasaporte"
-                />
+                <input type="text" name="clientDni" value={clientData.clientDni} onChange={handleClientChange} placeholder="DNI, CE o Pasaporte" />
                 <div className="form-feedback">
                   {errors.clientDni ? <span className="form-error">{errors.clientDni}</span> : null}
                   {dniAutoFilled ? <span className="form-success">✅ Datos autocompletados</span> : null}
@@ -242,156 +326,185 @@ function SalesForm({ saleToEdit, onClose, onSave }) {
               </div>
               <div className={`form-group ${errors.clientPhone ? 'error' : ''}`}>
                 <label>Teléfono</label>
-                <input
-                  type="text"
-                  name="clientPhone"
-                  value={formData.clientPhone}
-                  onChange={handleChange}
-                  placeholder="987654321"
-                />
+                <input type="text" name="clientPhone" value={clientData.clientPhone} onChange={handleClientChange} placeholder="987654321" />
                 {errors.clientPhone && <span className="form-error">{errors.clientPhone}</span>}
               </div>
               <div className={`form-group ${errors.clientEmail ? 'error' : ''}`}>
                 <label>Email</label>
-                <input
-                  type="email"
-                  name="clientEmail"
-                  value={formData.clientEmail}
-                  onChange={handleChange}
-                  placeholder="correo@email.com"
-                />
+                <input type="email" name="clientEmail" value={clientData.clientEmail} onChange={handleClientChange} placeholder="correo@email.com" />
                 {errors.clientEmail && <span className="form-error">{errors.clientEmail}</span>}
               </div>
             </div>
           </div>
 
-          <div className="form-section">
-            <h3 className="form-section-title">Detalle de Venta</h3>
-            <div className="form-grid">
-              <div className="form-group form-group-full">
-                <label>Mes de Inicio</label>
-                <select value={selectedMonth} onChange={(e) => {
-                  setSelectedMonth(e.target.value);
-                  setFormData(prev => ({ ...prev, courseId: '', totalAmount: '', paidAmount: '' }));
-                }}>
-                  {availableMonths.map(monthStr => {
-                    const [year, month] = monthStr.split('-');
-                    const date = new Date(year, parseInt(month) - 1);
-                    const label = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-                    return <option key={monthStr} value={monthStr}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
-                  })}
-                  {availableMonths.length === 0 && <option value="">No hay meses disponibles</option>}
-                </select>
+          {errors.duplicate && (
+            <div style={{ background: '#ff4d4f22', color: '#ff4d4f', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ff4d4f55' }}>
+              ⚠️ {errors.duplicate}
+            </div>
+          )}
+
+          {courseBlocks.map((block, index) => {
+            const scheduledCourseIds = new Set(
+              calendarEntries.filter(e => e.startDate && e.startDate.startsWith(block.selectedMonth)).map(e => e.courseId)
+            );
+            const availableCourses = coursesList.filter(c => scheduledCourseIds.has(c.id));
+            const debt = (Number(block.totalAmount) || 0) - (Number(block.paidAmount) || 0);
+
+            return (
+              <div key={index} className="form-section" style={{ position: 'relative', background: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
+                <h3 className="form-section-title" style={{ marginTop: 0 }}>
+                  Detalle del Curso {courseBlocks.length > 1 ? index + 1 : ''}
+                </h3>
+                
+                {!saleToEdit && courseBlocks.length > 1 && (
+                  <button type="button" onClick={() => removeCourseBlock(index)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Quitar
+                  </button>
+                )}
+
+                <div className="form-grid">
+                  <div className="form-group form-group-full">
+                    <label>Mes de Inicio</label>
+                    <select name="selectedMonth" value={block.selectedMonth} onChange={(e) => handleCourseChange(index, e)}>
+                      {availableMonths.map(monthStr => {
+                        const [year, month] = monthStr.split('-');
+                        const date = new Date(year, parseInt(month) - 1);
+                        const label = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+                        return <option key={monthStr} value={monthStr}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
+                      })}
+                      {availableMonths.length === 0 && <option value="">No hay meses disponibles</option>}
+                    </select>
+                  </div>
+                  
+                  <div className={`form-group form-group-full ${errors[`courseId_${index}`] ? 'error' : ''}`}>
+                    <label>Curso</label>
+                    <select name="courseId" value={block.courseId} onChange={(e) => handleCourseChange(index, e)}>
+                      <option value="">Seleccionar curso...</option>
+                      {availableCourses.map(c => {
+                        const isUrl = c.icon && (c.icon.includes('http') || c.icon.includes('www'));
+                        return (
+                          <option key={c.id} value={c.id}>
+                            {c.icon && !isUrl ? c.icon.trim() + ' ' : ''}{c.name} - {block.currency === 'USD' ? '$' : 'S/'} {c.price}
+                          </option>
+                        );
+                      })}
+                      {availableCourses.length === 0 && block.selectedMonth && <option value="" disabled>No hay cursos este mes</option>}
+                    </select>
+                    {errors[`courseId_${index}`] && <span className="form-error">{errors[`courseId_${index}`]}</span>}
+                  </div>
+
+                  <div className={`form-group ${errors[`modality_${index}`] ? 'error' : ''}`}>
+                    <label>Modalidad</label>
+                    <select name="modality" value={block.modality} onChange={(e) => handleCourseChange(index, e)}>
+                      <option value="semipresencial">Semipresencial</option>
+                      <option value="virtual">Virtual</option>
+                    </select>
+                    {errors[`modality_${index}`] && <span className="form-error">{errors[`modality_${index}`]}</span>}
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Moneda</label>
+                    <select name="currency" value={block.currency} onChange={(e) => handleCourseChange(index, e)}>
+                      <option value="PEN">Soles (S/)</option>
+                      <option value="USD">Dólares ($)</option>
+                    </select>
+                  </div>
+
+                  <div className={`form-group ${errors[`totalAmount_${index}`] ? 'error' : ''}`}>
+                    <label>Monto Total ({block.currency === 'USD' ? '$' : 'S/'})</label>
+                    <input type="number" name="totalAmount" value={block.totalAmount} onChange={(e) => handleCourseChange(index, e)} placeholder="0.00" min="0" step="0.01" />
+                    {errors[`totalAmount_${index}`] && <span className="form-error">{errors[`totalAmount_${index}`]}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Tipo de Pago</label>
+                    <select name="paymentType" value={block.paymentType} onChange={(e) => handleCourseChange(index, e)}>
+                      <option value="completo">Pago Completo</option>
+                      <option value="deuda">Deuda (Pago Parcial)</option>
+                    </select>
+                  </div>
+
+                  <div className={`form-group ${errors[`paidAmount_${index}`] ? 'error' : ''}`}>
+                    <label>Monto Pagado Inicial ({block.currency === 'USD' ? '$' : 'S/'})</label>
+                    <input type="number" name="paidAmount" value={block.paidAmount} onChange={(e) => handleCourseChange(index, e)} placeholder="0.00" min="0" step="0.01" disabled={block.paymentType === 'completo'} />
+                    {errors[`paidAmount_${index}`] && <span className="form-error">{errors[`paidAmount_${index}`]}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Fecha de Pago</label>
+                    <input type="date" name="paymentDate" value={block.paymentDate} onChange={(e) => handleCourseChange(index, e)} />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Cuenta de Depósito</label>
+                    <select name="paymentAccount" value={block.paymentAccount} onChange={(e) => handleCourseChange(index, e)}>
+                      <option value="PICHINCHA">PICHINCHA</option>
+                      <option value="GUAYAQUIL">GUAYAQUIL</option>
+                      <option value="YAPE MARIELA">YAPE MARIELA</option>
+                      <option value="YAPE DAYSI">YAPE DAYSI</option>
+                      <option value="INTERBANK">INTERBANK</option>
+                      <option value="PAYPAL">PAYPAL</option>
+                      <option value="WESTERN">WESTERN</option>
+                      <option value="NEQUI">NEQUI</option>
+                      <option value="EFECTIVO">EFECTIVO</option>
+                    </select>
+                  </div>
+                </div>
+
+                {block.totalAmount && (
+                  <div className="form-summary" style={{ background: 'var(--bg-card)' }}>
+                    <div className="summary-item">
+                      <span>Total Curso {courseBlocks.length > 1 ? index + 1 : ''}:</span>
+                      <strong>{block.currency === 'USD' ? '$' : 'S/'} {Number(block.totalAmount).toLocaleString()}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>Pagado:</span>
+                      <strong className="text-success">{block.currency === 'USD' ? '$' : 'S/'} {(Number(block.paidAmount) || 0).toLocaleString()}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>Deuda:</span>
+                      <strong className={debt > 0 ? 'text-danger' : 'text-success'}>
+                        {block.currency === 'USD' ? '$' : 'S/'} {Math.max(0, debt).toLocaleString()}
+                      </strong>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className={`form-group form-group-full ${errors.courseId ? 'error' : ''}`}>
-                  <label>Curso</label>
-                  <select name="courseId" value={formData.courseId} onChange={handleChange}>
-                    <option value="">Seleccionar curso...</option>
-                    {availableCourses.map(c => {
-                      const isUrl = c.icon && (c.icon.includes('http') || c.icon.includes('www'));
-                      return (
-                        <option key={c.id} value={c.id}>
-                          {c.icon && !isUrl ? c.icon.trim() + ' ' : ''}{c.name} - {formData.currency === 'USD' ? '$' : 'S/'} {c.price}
-                        </option>
-                      );
-                    })}
-                    {availableCourses.length === 0 && selectedMonth && <option value="" disabled>No hay cursos este mes</option>}
-                  </select>
-                {errors.courseId && <span className="form-error">{errors.courseId}</span>}
+            );
+          })}
+
+          {!saleToEdit && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <button type="button" onClick={addCourseBlock} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '30px' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Añadir otro curso a esta venta
+              </button>
+            </div>
+          )}
+
+          {courseBlocks.length > 1 && (
+            <div className="form-summary" style={{ background: 'linear-gradient(135deg, rgba(0,212,170,0.1), rgba(0,212,170,0.05))', border: '1px solid rgba(0,212,170,0.2)' }}>
+              <h4 style={{ margin: 0, width: '100%', color: 'var(--text-primary)', marginBottom: '12px' }}>Resumen General de la Venta Múltiple</h4>
+              <div className="summary-item">
+                <span>Total General:</span>
+                <strong style={{ fontSize: '1.2rem' }}>
+                  {courseBlocks.map(b => Number(b.totalAmount) || 0).reduce((a, b) => a + b, 0).toLocaleString()}
+                </strong>
               </div>
-              <div className={`form-group ${errors.modality ? 'error' : ''}`}>
-                <label>Modalidad</label>
-                <select name="modality" value={formData.modality} onChange={handleChange}>
-                  <option value="semipresencial">Semipresencial</option>
-                  <option value="virtual">Virtual</option>
-                </select>
-                {errors.modality && <span className="form-error">{errors.modality}</span>}
-              </div>
-              <div className="form-group">
-                <label>Moneda</label>
-                <select name="currency" value={formData.currency} onChange={handleChange}>
-                  <option value="PEN">Soles (S/)</option>
-                  <option value="USD">Dólares ($)</option>
-                </select>
-              </div>
-              <div className={`form-group ${errors.totalAmount ? 'error' : ''}`}>
-                <label>Monto Total ({formData.currency === 'USD' ? '$' : 'S/'})</label>
-                <input
-                  type="number"
-                  name="totalAmount"
-                  value={formData.totalAmount}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                />
-                {errors.totalAmount && <span className="form-error">{errors.totalAmount}</span>}
-              </div>
-              <div className="form-group">
-                <label>Tipo de Pago</label>
-                <select name="paymentType" value={formData.paymentType} onChange={handleChange}>
-                  <option value="completo">Pago Completo</option>
-                  <option value="deuda">Deuda (Pago Parcial)</option>
-                </select>
-              </div>
-              <div className={`form-group ${errors.paidAmount ? 'error' : ''}`}>
-                <label>Monto Pagado Inicial ({formData.currency === 'USD' ? '$' : 'S/'})</label>
-                <input
-                  type="number"
-                  name="paidAmount"
-                  value={formData.paidAmount}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  disabled={formData.paymentType === 'completo'}
-                />
-                {errors.paidAmount && <span className="form-error">{errors.paidAmount}</span>}
-              </div>
-              <div className="form-group">
-                <label>Fecha de Pago</label>
-                <input
-                  type="date"
-                  name="paymentDate"
-                  value={formData.paymentDate}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>Cuenta de Depósito</label>
-                <select name="paymentAccount" value={formData.paymentAccount} onChange={handleChange}>
-                    <option value="PICHINCHA">PICHINCHA</option>
-                    <option value="GUAYAQUIL">GUAYAQUIL</option>
-                    <option value="YAPE MARIELA">YAPE MARIELA</option>
-                    <option value="YAPE DAYSI">YAPE DAYSI</option>
-                    <option value="INTERBANK">INTERBANK</option>
-                    <option value="PAYPAL">PAYPAL</option>
-                    <option value="WESTERN">WESTERN</option>
-                    <option value="NEQUI">NEQUI</option>
-                    <option value="EFECTIVO">EFECTIVO</option>
-                  </select>
+              <div className="summary-item">
+                <span>Total Pagado:</span>
+                <strong className="text-success" style={{ fontSize: '1.2rem' }}>
+                  {courseBlocks.map(b => Number(b.paidAmount) || 0).reduce((a, b) => a + b, 0).toLocaleString()}
+                </strong>
               </div>
             </div>
-
-            {formData.totalAmount && (
-              <div className="form-summary">
-                <div className="summary-item">
-                  <span>Total:</span>
-                  <strong>{formData.currency === 'USD' ? '$' : 'S/'} {Number(formData.totalAmount).toLocaleString()}</strong>
-                </div>
-                <div className="summary-item">
-                  <span>Pagado:</span>
-                  <strong className="text-success">{formData.currency === 'USD' ? '$' : 'S/'} {(Number(formData.paidAmount) || 0).toLocaleString()}</strong>
-                </div>
-                <div className="summary-item">
-                  <span>Deuda:</span>
-                  <strong className={debt > 0 ? 'text-danger' : 'text-success'}>
-                    {formData.currency === 'USD' ? '$' : 'S/'} {Math.max(0, debt).toLocaleString()}
-                  </strong>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
 
           <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={isSubmitting}>Cancelar</button>
