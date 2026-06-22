@@ -83,6 +83,9 @@ def generate_certificate_pdf(
     c.drawString(116, 660, academic_hours)
 
     # Fecha de emisión - debajo de "CERTIFICADO DE PARTICIPACIÓN"
+    if not issue_date.strip().lower().startswith("lima,"):
+        issue_date = f"Lima, {issue_date}"
+
     c.setFillColorRGB(1, 1, 1)
     c.setFont("Helvetica-Oblique", 18)
     c.drawString(116, 530, issue_date)
