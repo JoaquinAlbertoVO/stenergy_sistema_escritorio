@@ -26,38 +26,21 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     try {
-      // 2. Autenticar con el backend de FastAPI
-      const response = await fetch(`${process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000'}/api/auth`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        setCurrentUser(userData);
-        await preloadData();
-        return { success: true, user: userData };
-      } else {
-        return { success: false, error: 'Credenciales inválidas' };
-      }
-    } catch (error) {
-      console.error('Error de autenticación:', error);
-      // Fallback: intentar con usuarios locales (para compatibilidad)
-      const localUsers = localStorage.getItem('st_energy_users');
-      if (localUsers) {
-        const users = JSON.parse(localUsers);
-        const found = users.find(u => u.username === username && u.password === password);
-        if (found) {
-          const userData = { id: found.id, name: found.name, username: found.username, role: found.role };
-          setUser(userData);
-          setCurrentUser(userData);
+      if (window.electronAPI) {
+        const response = await window.electronAPI.authenticateUser(username, password);
+        if (response.success) {
+          setUser(response.user);
+          setCurrentUser(response.user);
           await preloadData();
-          return { success: true, user: userData };
+          return { success: true, user: response.user };
+        } else {
+          return { success: false, error: response.error || 'Credenciales inválidas' };
         }
       }
-      return { success: false, error: 'No se pudo conectar al servidor' };
+      return { success: false, error: 'La aplicación no está corriendo en modo Electron.' };
+    } catch (error) {
+      console.error('Error de autenticación:', error);
+      return { success: false, error: 'Error del sistema' };
     }
   };
 

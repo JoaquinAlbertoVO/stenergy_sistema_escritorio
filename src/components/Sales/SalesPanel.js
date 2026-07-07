@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getSales, getCourses, deleteSale } from '../../utils/storage';
 import SalesForm from './SalesForm';
 import PaymentHistoryModal from './PaymentHistoryModal';
+import MysqlConfigModal from '../Settings/MysqlConfigModal';
 import CountUp from '../ui/CountUp/CountUp';
 import ElectricBorder from '../ui/ElectricBorder/ElectricBorder';
 import SpotlightCard from '../ui/SpotlightCard/SpotlightCard';
@@ -42,6 +43,9 @@ function SalesPanel() {
   const [filterExactDate, setFilterExactDate] = useState('');
   const [filterAccount, setFilterAccount] = useState('all');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showMysqlConfig, setShowMysqlConfig] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState(null);
 
   const coursesList = getCourses();
 
@@ -103,6 +107,27 @@ function SalesPanel() {
       } finally {
         setIsDeleting(false);
       }
+    }
+  };
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    setSyncMessage({ type: 'info', text: 'Sincronizando con la nube...' });
+    try {
+      if (window.electronAPI) {
+        const result = await window.electronAPI.startMysqlSync();
+        if (result.success) {
+          setSyncMessage({ type: 'success', text: '¡Sincronización completada exitosamente!' });
+          loadSales(); // Reload data after sync
+        }
+      } else {
+        setSyncMessage({ type: 'error', text: 'La sincronización solo funciona en la aplicación de escritorio.' });
+      }
+    } catch (error) {
+      setSyncMessage({ type: 'error', text: error.message });
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setSyncMessage(null), 5000);
     }
   };
 
@@ -206,6 +231,23 @@ function SalesPanel() {
               Excel
             </button>
 
+            <button className="btn-secondary" onClick={handleSync} disabled={isSyncing} style={{ whiteSpace: 'nowrap', borderColor: '#4a90e2', color: '#4a90e2' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16" className={isSyncing ? "spin" : ""}>
+                <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              </svg>
+              {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
+            </button>
+
+            {isAdmin() && (
+              <button className="btn-secondary" onClick={() => setShowMysqlConfig(true)} style={{ whiteSpace: 'nowrap' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Configurar Nube
+              </button>
+            )}
+
             <ElectricBorder 
               borderRadius={8} 
               color="#ffba0d" 
@@ -226,6 +268,12 @@ function SalesPanel() {
             </ElectricBorder>
           </div>
         </div>
+
+        {syncMessage && (
+          <div className={`form-alert ${syncMessage.type}`} style={{ margin: '16px 20px 0', padding: '12px', borderRadius: '8px', background: syncMessage.type === 'error' ? 'rgba(255, 68, 68, 0.1)' : 'rgba(0, 212, 170, 0.1)', color: syncMessage.type === 'error' ? '#ff4444' : '#00d4aa', border: `1px solid ${syncMessage.type === 'error' ? '#ff4444' : '#00d4aa'}` }}>
+            {syncMessage.text}
+          </div>
+        )}
 
         <div className="toolbar-filters-row" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
             <select
@@ -427,8 +475,12 @@ function SalesPanel() {
         <PaymentHistoryModal
           sale={selectedSaleForPayments}
           onClose={() => setSelectedSaleForPayments(null)}
-          onSave={loadSales}
+          onPaymentAdded={loadSales}
         />
+      )}
+
+      {showMysqlConfig && (
+        <MysqlConfigModal onClose={() => setShowMysqlConfig(false)} />
       )}
     </div>
   );

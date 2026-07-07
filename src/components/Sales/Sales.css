@@ -7,8 +7,16 @@
 .dashboard-metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: 8px;
+  min-width: 150px;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 .metric-card {

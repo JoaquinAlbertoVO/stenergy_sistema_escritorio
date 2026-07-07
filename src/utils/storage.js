@@ -1,206 +1,157 @@
 // ============================================
-// storage.js — API Backend (ya no usa localStorage para datos)
+// storage.js — API Electron (Local) con Caché
 // ============================================
-// La autenticación (sesión del usuario) sigue en localStorage.
-// Los datos (ventas, cursos, calendario) ahora van al backend API.
 
-const API_URL = process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000';
+const isElectron = window.electronAPI !== undefined;
 
-// ============================================
-// Helper para peticiones HTTP
-// ============================================
-export async function apiFetch(endpoint, options = {}) {
-  const url = `${API_URL}${endpoint}`;
-  const config = {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  };
-
-  try {
-    const response = await fetch(url, config);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Error HTTP ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(`API Error [${endpoint}]:`, error);
-    throw error;
-  }
-}
-
-// ============================================
-// Cache local para reducir llamadas repetidas
-// ============================================
-let _salesCache = null;
-let _coursesCache = null;
-let _calendarCache = null;
+let _salesCache = [];
+let _coursesCache = [];
+let _calendarCache = [];
 
 export async function preloadData() {
-  try {
-    _salesCache = await apiFetch('/api/sales').catch(() => []);
-    _coursesCache = await apiFetch('/api/courses').catch(() => []);
-    _calendarCache = await apiFetch('/api/calendar').catch(() => []);
-  } catch (e) {
-    console.error("Error preloading data", e);
-  }
+    if (!isElectron) return;
+    try {
+        _salesCache = await window.electronAPI.getSales() || [];
+        _coursesCache = await window.electronAPI.getCourses() || [];
+        _calendarCache = await window.electronAPI.getCalendarData() || [];
+    } catch (e) {
+        console.error("Error preloading data in Electron", e);
+    }
 }
 
 export async function invalidateCache(type) {
-  if (!type || type === 'sales') _salesCache = await apiFetch('/api/sales').catch(() => []);
-  if (!type || type === 'courses') _coursesCache = await apiFetch('/api/courses').catch(() => []);
-  if (!type || type === 'calendar') _calendarCache = await apiFetch('/api/calendar').catch(() => []);
+    if (!isElectron) return;
+    if (!type || type === 'sales') _salesCache = await window.electronAPI.getSales() || [];
+    if (!type || type === 'courses') _coursesCache = await window.electronAPI.getCourses() || [];
+    if (!type || type === 'calendar') _calendarCache = await window.electronAPI.getCalendarData() || [];
 }
 
 // ============================================
 // Sales
 // ============================================
 export function getSales() {
-  return _salesCache || [];
+    return _salesCache || [];
+}
+
+export async function fetchSales() {
+    return _salesCache; // Alias por compatibilidad
 }
 
 export async function addSale(sale) {
-  sale.id = 's' + Date.now();
-  // Preparar payments con ids
-  if (sale.payments) {
-    sale.payments = sale.payments.map((p, i) => ({
-      ...p,
-      id: `pay_${sale.id}_${i}`,
-      saleId: sale.id,
-    }));
-  }
-  const result = await apiFetch('/api/sales', {
-    method: 'POST',
-    body: JSON.stringify(sale),
-  });
-  await invalidateCache('sales');
-  return result;
+    if (!isElectron) return sale;
+    sale.id = 's' + Date.now();
+    if (sale.payments) {
+        sale.payments = sale.payments.map((p, i) => ({
+            ...p,
+            id: `pay_${sale.id}_${i}`,
+            saleId: sale.id,
+        }));
+    }
+    const result = await window.electronAPI.addSale(sale);
+    await invalidateCache('sales');
+    return result;
 }
 
 export async function updateSale(id, updates) {
-  // Si updates tiene payments, necesitamos agregar ids y saleId
-  if (updates.payments) {
-    updates.payments = updates.payments.map((p, i) => ({
-      ...p,
-      id: p.id || `pay_${id}_${Date.now()}_${i}`,
-      saleId: id,
-    }));
-  }
-  const result = await apiFetch(`/api/sales/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(updates),
-  });
-  await invalidateCache('sales');
-  return result;
+    if (!isElectron) return updates;
+    if (updates.payments) {
+        updates.payments = updates.payments.map((p, i) => ({
+            ...p,
+            id: p.id || `pay_${id}_${Date.now()}_${i}`,
+            saleId: id,
+        }));
+    }
+    const result = await window.electronAPI.updateSale(id, updates);
+    await invalidateCache('sales');
+    return result;
 }
 
 export async function deleteSale(id) {
-  await apiFetch(`/api/sales/${id}`, { method: 'DELETE' });
-  await invalidateCache('sales');
+    if (!isElectron) return;
+    await window.electronAPI.deleteSale(id);
+    await invalidateCache('sales');
 }
 
 // ============================================
 // Courses
 // ============================================
 export function getCourses() {
-  return _coursesCache || [];
+    return _coursesCache || [];
+}
+
+export async function fetchCourses() {
+    return _coursesCache;
 }
 
 export async function addCourse(course) {
-  course.id = 'c' + Date.now();
-  const result = await apiFetch('/api/courses', {
-    method: 'POST',
-    body: JSON.stringify(course),
-  });
-  await invalidateCache('courses');
-  return result;
+    if (!isElectron) return course;
+    course.id = 'c' + Date.now();
+    const result = await window.electronAPI.addCourse(course);
+    await invalidateCache('courses');
+    return result;
 }
 
 export async function updateCourse(id, updates) {
-  const result = await apiFetch(`/api/courses/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(updates),
-  });
-  await invalidateCache('courses');
-  return result;
+    if (!isElectron) return updates;
+    const result = await window.electronAPI.updateCourse(id, updates);
+    await invalidateCache('courses');
+    return result;
 }
 
 export async function deleteCourse(id) {
-  await apiFetch(`/api/courses/${id}`, { method: 'DELETE' });
-  await invalidateCache('courses');
+    if (!isElectron) return;
+    await window.electronAPI.deleteCourse(id);
+    await invalidateCache('courses');
 }
 
 export async function syncCoursesWithWP() {
-  const result = await apiFetch('/api/wp/sync-courses', { method: 'POST' });
-  await invalidateCache('courses');
-  return result;
+    if (!isElectron) return { success: false, error: 'Not in Electron' };
+    const result = await window.electronAPI.syncCoursesWithWP();
+    await invalidateCache('courses');
+    return result;
 }
 
 // ============================================
 // Calendar
 // ============================================
 export function getCalendarData() {
-  return _calendarCache || [];
+    return _calendarCache || [];
+}
+
+export async function fetchCalendarData() {
+    return _calendarCache;
 }
 
 export async function addCalendarEntry(entry) {
-  entry.id = 'cal' + Date.now();
-  const result = await apiFetch('/api/calendar', {
-    method: 'POST',
-    body: JSON.stringify(entry),
-  });
-  await invalidateCache('calendar');
-  return result;
+    if (!isElectron) return entry;
+    entry.id = 'cal' + Date.now();
+    const result = await window.electronAPI.addCalendarEntry(entry);
+    await invalidateCache('calendar');
+    return result;
 }
 
 export async function updateCalendarEntry(id, updates) {
-  const result = await apiFetch(`/api/calendar/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(updates),
-  });
-  await invalidateCache('calendar');
-  return result;
+    if (!isElectron) return updates;
+    const result = await window.electronAPI.updateCalendarEntry(id, updates);
+    await invalidateCache('calendar');
+    return result;
 }
 
 export async function deleteCalendarEntry(id) {
-  await apiFetch(`/api/calendar/${id}`, { method: 'DELETE' });
-  await invalidateCache('calendar');
+    if (!isElectron) return;
+    await window.electronAPI.deleteCalendarEntry(id);
+    await invalidateCache('calendar');
+}
+
+export function getCoursesOnDate(dateStr) {
+    const calendar = getCalendarData();
+    return calendar.filter(entry => {
+      return dateStr >= entry.startDate && dateStr <= entry.endDate;
+    });
 }
 
 // ============================================
-// Auth (sigue en localStorage — es local por naturaleza)
-// ============================================
-const KEYS = {
-  CURRENT_USER: 'st_energy_current_user',
-};
-
-export function getUsers() {
-  // Users ahora también vienen del backend, pero mantenemos compatibilidad
-  return apiFetch('/api/users');
-}
-
-export function authenticateUser(username, password) {
-  return apiFetch('/api/auth', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  });
-}
-
-export function setCurrentUser(user) {
-  localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(user));
-}
-
-export function getCurrentUser() {
-  const data = localStorage.getItem(KEYS.CURRENT_USER);
-  return data ? JSON.parse(data) : null;
-}
-
-export function clearCurrentUser() {
-  localStorage.removeItem(KEYS.CURRENT_USER);
-}
-
-// ============================================
-// Stats (calculada a partir de datos de la API)
+// Stats (calculada a partir de datos)
 // ============================================
 export function getSalesStats(userId = null) {
   let sales = getSales();
@@ -228,60 +179,43 @@ export function getSalesStats(userId = null) {
 }
 
 // ============================================
-// Helper: Count courses on date (for Calendar)
+// Auth (Sigue usando localStorage para sesión actual)
 // ============================================
-export function getCoursesOnDate(dateStr) {
-  const calendar = getCalendarData();
-  return calendar.filter(entry => {
-    return dateStr >= entry.startDate && dateStr <= entry.endDate;
-  });
+const KEYS = {
+    CURRENT_USER: 'st_energy_current_user',
+};
+
+export async function getUsers() {
+    if (!isElectron) return [];
+    return await window.electronAPI.getUsers();
 }
 
-// ============================================
-// Initialize — ya no necesita cargar datos demo
-// ============================================
-export function initializeData() {
-  // No-op: los datos están en el backend
-  // La autenticación se maneja por separado
+export async function authenticateUser(username, password) {
+    if (!isElectron) return { success: false, error: 'Not in Electron' };
+    return await window.electronAPI.authenticateUser(username, password);
 }
 
-// ============================================
-// Migration helper — migrar datos de localStorage al backend
-// ============================================
-export async function migrateLocalStorageToBackend() {
-  const localSales = localStorage.getItem('st_energy_sales');
-  const localCourses = localStorage.getItem('st_energy_courses');
-  const localCalendar = localStorage.getItem('st_energy_calendar');
-  const localUsers = localStorage.getItem('st_energy_users');
-
-  if (!localSales && !localCourses && !localCalendar) {
-    return { migrated: false, message: 'No hay datos locales para migrar' };
-  }
-
-  const data = {
-    sales: localSales ? JSON.parse(localSales) : [],
-    courses: localCourses ? JSON.parse(localCourses) : [],
-    calendar: localCalendar ? JSON.parse(localCalendar) : [],
-    users: localUsers ? JSON.parse(localUsers) : [],
-  };
-
-  try {
-    const result = await apiFetch('/api/migrate', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-
-    // Marcar como migrado para no volver a hacerlo
-    localStorage.setItem('st_energy_migrated_to_api', 'true');
-    
-    return { migrated: true, message: 'Datos migrados exitosamente', result };
-  } catch (error) {
-    return { migrated: false, message: `Error migrando: ${error.message}` };
-  }
+export function setCurrentUser(user) {
+    localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(user));
 }
+
+export function getCurrentUser() {
+    const data = localStorage.getItem(KEYS.CURRENT_USER);
+    return data ? JSON.parse(data) : null;
+}
+
+export function clearCurrentUser() {
+    localStorage.removeItem(KEYS.CURRENT_USER);
+}
+
+export function initializeData() {}
 
 export function needsMigration() {
-  const hasMigrated = localStorage.getItem('st_energy_migrated_to_api');
-  const hasLocalData = localStorage.getItem('st_energy_sales') || localStorage.getItem('st_energy_courses');
-  return !hasMigrated && !!hasLocalData;
+    return false;
+}
+
+// PDF Certificate hook
+export async function generateCertificate(saleId) {
+    if (!isElectron) return null;
+    return await window.electronAPI.generateCertificate(saleId);
 }

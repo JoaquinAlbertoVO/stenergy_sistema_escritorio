@@ -1,194 +1,86 @@
-import { getCalendarData, getCourses } from './storage';
-
-// En desarrollo usa localhost, en producción usa la URL de Render
-const CERTIFICATE_API_URL = process.env.REACT_APP_CERT_API_URL || 'http://localhost:8000';
+// Constants
+const CERTIFICATES_KEY = 'st_energy_certificates';
 
 /**
- * Busca las fechas del curso en el calendario.
- * @param {string} courseId - ID del curso
- * @returns {object|null} - { startDate, endDate } o null si no se encuentra
+ * Initialize certificates array in localStorage if it doesn't exist
  */
-export function getCourseDates(courseId) {
-  const calendar = getCalendarData();
-  const entry = calendar.find(c => c.courseId === courseId);
-  if (!entry) return null;
-  return { startDate: entry.startDate, endDate: entry.endDate };
-}
-
-/**
- * Calcula la fecha de emisión según la modalidad:
- * - Semipresencial: "del {startDate} al {endDate}"
- * - Virtual: "del {endDate + 1 día} al {endDate + 1 día}"
- */
-export function calculateCertificateDates(courseId, modality) {
-  const dates = getCourseDates(courseId);
-
-  if (!dates) {
-    // Si no hay fechas en el calendario, usar la fecha actual
-    const today = new Date();
-    const formatted = formatDateSpanish(today);
-    return {
-      issueDate: formatted,
-      description: `realizado el ${formatted}`,
-    };
+const initCertificates = () => {
+  if (!localStorage.getItem(CERTIFICATES_KEY)) {
+    localStorage.setItem(CERTIFICATES_KEY, JSON.stringify([]));
   }
-
-  const start = new Date(dates.startDate + 'T00:00:00');
-  const end = new Date(dates.endDate + 'T00:00:00');
-
-  if (modality === 'virtual') {
-    // Virtual: fecha = endDate + 1 día
-    const virtualDate = new Date(end);
-    virtualDate.setDate(virtualDate.getDate() + 1);
-    const formatted = formatDateSpanish(virtualDate);
-    return {
-      issueDate: formatted,
-      description: `realizado el ${formatted}`,
-    };
-  } else {
-    // Semipresencial: rango completo del curso
-    const startFormatted = formatDateSpanish(start);
-    const endFormatted = formatDateSpanish(end);
-    return {
-      issueDate: endFormatted,
-      description: `realizado del ${startFormatted} al ${endFormatted}`,
-    };
-  }
-}
+};
 
 /**
- * Formatea una fecha en español: "15 de junio de 2026"
+ * Get all certificates from localStorage
  */
-function formatDateSpanish(date) {
-  const months = [
-    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-  ];
-  const day = date.getDate();
-  const month = months[date.getMonth()];
+export const getCertificates = () => {
+  initCertificates();
+  return JSON.parse(localStorage.getItem(CERTIFICATES_KEY));
+};
+
+/**
+ * Save certificates to localStorage
+ */
+const saveCertificates = (certs) => {
+  localStorage.setItem(CERTIFICATES_KEY, JSON.stringify(certs));
+};
+
+/**
+ * Get all certificates generated for a specific student/client
+ */
+export const getCertificatesByClient = (clientId) => {
+  const certs = getCertificates();
+  return certs.filter(cert => cert.clientId === clientId);
+};
+
+/**
+ * Get a specific certificate by its registry number
+ */
+export const getCertificateByRegistryNumber = (registryNumber) => {
+  const certs = getCertificates();
+  return certs.find(cert => cert.registryNumber === registryNumber);
+};
+
+export const generateCertificate = async (sale) => {
+  try {
+    if (window.electronAPI) {
+      const response = await window.electronAPI.generateCertificate(sale.id);
+      if (response.success) {
+        return {
+          success: true,
+          registryNumber: response.registryNumber,
+          pdfPath: response.pdfPath
+        };
+      } else {
+        throw new Error(response.error || 'Error al generar certificado');
+      }
+    } else {
+      throw new Error('Electron no está disponible');
+    }
+  } catch (error) {
+    console.error('Error in generateCertificate:', error);
+    throw error;
+  }
+};
+
+export const downloadCertificatePdf = async (registryNumber) => {
+  try {
+    // Si estamos en electron local, el PDF ya está guardado localmente
+    console.log(`El certificado ${registryNumber} se generó y guardó localmente.`);
+  } catch (error) {
+    console.error('Error opening certificate PDF:', error);
+    throw error;
+  }
+};
+
+export const calculateCertificateDates = (courseId, modality) => {
+  const date = new Date();
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
-  return `${day} de ${month} de ${year}`;
-}
-
-/**
- * Genera un número de registro basado en el código del curso y el DNI.
- * Formato: CERT-{COURSE_CODE}-{DNI}
- * Si no hay código de curso, usa un fallback con timestamp.
- */
-function generateRegistryNumber(courseCode, dni) {
-  if (courseCode && dni) {
-    // Limpiar DNI de caracteres no numéricos
-    const cleanDni = dni.replace(/\D/g, '');
-    // Quitar espacios del código de curso (ej: "MSE VIR" -> "MSEVIR")
-    const cleanCode = courseCode.replace(/\s+/g, '').toUpperCase();
-    return `CERT-${cleanCode}-${cleanDni}`;
-  }
-  // Fallback si no hay código de curso
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  const rand = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-  return `CERT-${y}${m}${d}-${rand}`;
-}
-
-/**
- * Calcula las horas académicas del curso basándose en la configuración del curso dinámico o predeterminadas.
- * @param {string} courseId - ID del curso
- * @param {string} courseName - Nombre del curso
- * @returns {string} - Horas académicas formateadas
- */
-function getAcademicHours(courseId, courseName) {
-  const courses = getCourses();
-  const course = courses.find(c => c.id === courseId);
-  if (course && course.academicHours) {
-    return course.academicHours;
-  }
-
-  // Horas predeterminadas por curso (pueden personalizarse)
-  const hoursMap = {
-    'Subestaciones Eléctricas': '120 horas académicas',
-    'Mantenimiento Eléctrico Industrial': '180 horas académicas',
-    'Tableros Eléctricos': '90 horas académicas',
-    'Instalaciones Eléctricas': '150 horas académicas',
-    'Automatización Industrial': '180 horas académicas',
-    'Protecciones Eléctricas': '120 horas académicas',
-    'Sistemas de Puesta a Tierra': '90 horas académicas',
-    'Energía Solar Fotovoltaica': '150 horas académicas',
+  
+  return {
+    issueDate: `${day}/${month}/${year}`,
+    description: `realizado de forma ${modality || 'Virtual'}`
   };
-  return hoursMap[courseName] || '120 horas académicas';
-}
-
-/**
- * Solicita la generación de un certificado al backend Python.
- * @param {object} sale - Datos de la venta
- * @returns {Promise<object>} - Resultado con URL de descarga
- */
-export async function generateCertificate(sale) {
-  const overrides = sale.certificateOverrides || {};
-
-  const { issueDate: defaultIssueDate, description } = calculateCertificateDates(sale.courseId, sale.modality);
-  const defaultAcademicHours = getAcademicHours(sale.courseId, sale.courseName);
-
-  const courses = getCourses();
-  const course = courses.find(c => c.id === sale.courseId);
-  
-  // Obtener código del curso para el número de registro
-  const courseCode = course?.courseCode || '';
-  const studentDni = overrides.dni || sale.clientDni;
-  const registryNumber = generateRegistryNumber(courseCode, studentDni);
-  
-  // Usar la descripción dinámica del curso o un texto por defecto
-  let defaultDescriptionText = `Por haber participado en el curso de "${sale.courseName}", ${description}.`;
-  if (course && course.descriptionText) {
-    defaultDescriptionText = course.descriptionText;
-  }
-
-  const payload = {
-    student_name: overrides.studentName || sale.clientName,
-    dni: overrides.dni ? `DNI: ${overrides.dni}` : `DNI: ${sale.clientDni}`,
-    academic_hours: overrides.academicHours || defaultAcademicHours,
-    issue_date: overrides.issueDate || defaultIssueDate,
-    description_text: overrides.descriptionText || defaultDescriptionText,
-    registry_number: registryNumber,
-    course_name: overrides.cpanelFolder || course?.cpanelFolder || sale.courseName,
-  };
-
-  const response = await fetch(`${CERTIFICATE_API_URL}/api/generate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Error al generar el certificado');
-  }
-
-  const result = await response.json();
-  return result;
-}
-
-/**
- * Descarga el PDF del certificado generado.
- * @param {string} registryNumber - Número de registro del certificado
- */
-export async function downloadCertificatePdf(registryNumber) {
-  const response = await fetch(`${CERTIFICATE_API_URL}/api/download/${registryNumber}`);
-
-  if (!response.ok) {
-    throw new Error('No se pudo descargar el certificado');
-  }
-
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${registryNumber}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  window.URL.revokeObjectURL(url);
-  
-  return blob;
-}
+};
