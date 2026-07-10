@@ -15,12 +15,12 @@ async function generateCertificatePdf(sale, course, registryNumber) {
     // O si estaban en backend, vamos a intentar usar las del backend si existen.
     const projectRoot = process.env.NODE_ENV === 'development' ? path.join(__dirname, '..') : process.resourcesPath;
     
-    // Rutas originales en el sistema python: backend/generador_certs/assets/...
-    const frontPath = path.join(projectRoot, 'backend', 'generador_certs', 'assets', 'frente.jpg');
-    const backPath = path.join(projectRoot, 'backend', 'generador_certs', 'assets', 'reverso.jpg');
+    // Usamos las plantillas de la carpeta local assets
+    const frontPath = path.join(projectRoot, 'assets', 'front.png');
+    const backPath = path.join(projectRoot, 'assets', 'back.png');
 
     if (!fs.existsSync(frontPath) || !fs.existsSync(backPath)) {
-        throw new Error('No se encontraron las plantillas de certificado (frente.jpg / reverso.jpg)');
+        throw new Error('No se encontraron las plantillas de certificado (front.png / back.png)');
     }
 
     const frontImageBytes = fs.readFileSync(frontPath);
@@ -35,8 +35,8 @@ async function generateCertificatePdf(sale, course, registryNumber) {
     const helveticaOblique = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
     // Embed images
-    const frontImage = await pdfDoc.embedJpg(frontImageBytes);
-    const backImage = await pdfDoc.embedJpg(backImageBytes);
+    const frontImage = await pdfDoc.embedPng(frontImageBytes);
+    const backImage = await pdfDoc.embedPng(backImageBytes);
 
     const pageWidth = 1462;
     const pageHeight = 1024;

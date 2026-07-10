@@ -20,7 +20,7 @@ function createWindow() {
     const isDev = process.env.NODE_ENV === 'development';
     if (isDev) {
         mainWindow.loadURL('http://localhost:3000');
-        // mainWindow.webContents.openDevTools();
+        mainWindow.webContents.openDevTools();
     } else {
         mainWindow.loadFile(path.join(__dirname, '../build/index.html'));
     }
@@ -39,10 +39,21 @@ app.whenReady().then(() => {
         console.error("Failed to initialize database:", error);
     }
 
-    // Register all IPC Handlers (Backend logic)
-    registerIpcHandlers();
+    console.log("Registering IPC handlers...");
+    try {
+        registerIpcHandlers();
+        console.log("IPC handlers registered successfully.");
+    } catch (e) {
+        console.error("Error in registerIpcHandlers:", e);
+    }
 
-    createWindow();
+    console.log("Creating window...");
+    try {
+        createWindow();
+        console.log("Window created.");
+    } catch (e) {
+        console.error("Error creating window:", e);
+    }
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

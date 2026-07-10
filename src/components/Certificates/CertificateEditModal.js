@@ -77,20 +77,18 @@ function CertificateEditModal({ sale, onClose, onSave }) {
     setMessage(null);
 
     try {
-      // Generar certificado pasando la venta actualizada
-      const updatedSale = { ...sale, certificateOverrides: formData };
-      const result = await generateCertificate(updatedSale);
+      // Generar certificado pasando el ID de la venta
+      const result = await generateCertificate(sale.id);
 
-      if (result.success) {
+      if (result && result.success) {
         await updateSale(sale.id, { certificateGenerated: true });
         await downloadCertificatePdf(result.registry_number);
         
         // Enlazar la URL pública del certificado al perfil del alumno en WordPress
-        // El PDF ya existe en stenergyedu.com/CERTIFICADOS_2026/, solo guardamos la referencia
         linkCertificateToWP(
           result.public_url,
           sale.courseId,
-          updatedSale.certificateOverrides?.dni || sale.clientDni
+          formData.dni || sale.clientDni
         ).then(wpRes => {
           if(!wpRes.success) console.error("Error enlazando a WP:", wpRes.error);
         });
@@ -98,10 +96,11 @@ function CertificateEditModal({ sale, onClose, onSave }) {
         setMessage({ type: 'success', text: `✅ Certificado generado y enlazado a WP: ${result.registry_number}` });
         if (onSave) onSave();
       } else {
-        setMessage({ type: 'error', text: `❌ ${result.error || 'Error al generar'}` });
+        setMessage({ type: 'error', text: `❌ ${result?.error || 'Error al generar'}` });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: `❌ Error de conexión con el servidor.` });
+      console.error("Error generating certificate:", error);
+      setMessage({ type: 'error', text: `❌ Error de servidor: ${error.message || error}` });
     } finally {
       setIsGenerating(false);
     }

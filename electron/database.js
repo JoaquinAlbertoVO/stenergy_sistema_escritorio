@@ -97,6 +97,20 @@ function initDB() {
     } catch (e) {
         // Column probably already exists
     }
+    try {
+        db.prepare('ALTER TABLE sales ADD COLUMN certificateOverrides TEXT').run();
+    } catch (e) {}
+
+    // Try to alter courses table to add new columns if they don't exist
+    try {
+        db.prepare('ALTER TABLE courses ADD COLUMN cpanelFolder TEXT').run();
+    } catch (e) {}
+    try {
+        db.prepare('ALTER TABLE courses ADD COLUMN academicHours TEXT').run();
+    } catch (e) {}
+    try {
+        db.prepare('ALTER TABLE courses ADD COLUMN descriptionText TEXT').run();
+    } catch (e) {}
 }
 
 module.exports = {

@@ -164,6 +164,7 @@ function CourseFormModal({ courseToEdit, onClose, onSave }) {
       onSave();
     } catch (error) {
       console.error("Error saving course", error);
+      alert("Error guardando el curso: " + (error.message || error));
     } finally {
       setIsSubmitting(false);
     }
